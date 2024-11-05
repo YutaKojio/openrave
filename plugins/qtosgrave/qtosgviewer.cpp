@@ -1776,6 +1776,7 @@ void QtOSGViewer::_DrawBoxArray(OSGSwitchPtr handle, const std::vector<RaveVecto
     OSGMatrixTransformPtr trans(new osg::MatrixTransform());
     osg::ref_ptr<osg::Geode> geode(new osg::Geode());
     bool size_mismatch = vcolors.size() != vpos.size();
+    const RaveVector<float> vdefaultcolor(1,0.5,0.5,1);
     for (size_t i = 0; i < vpos.size(); i++) {
         const RaveVector<float>& pos = vpos[i];
         osg::ref_ptr<osg::Box> box = new osg::Box();
@@ -1784,8 +1785,7 @@ void QtOSGViewer::_DrawBoxArray(OSGSwitchPtr handle, const std::vector<RaveVecto
         
         osg::ref_ptr<osg::ShapeDrawable> sd = new osg::ShapeDrawable(box.get());
         if (size_mismatch) {
-            const RaveVector<float>& color = vcolors[0];
-            sd->setColor(osg::Vec4f(color.x, color.y, color.z, color.w));
+            sd->setColor(osg::Vec4f(vdefaultcolor.x, vdefaultcolor.y, vdefaultcolor.z, vdefaultcolor.w));
         } else {
             sd->setColor(osg::Vec4f(vcolors[i].x, vcolors[i].y, vcolors[i].z, vcolors[i].w));
         }

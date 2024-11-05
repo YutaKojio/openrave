@@ -2743,19 +2743,16 @@ object PyEnvironmentBase::drawbox(object opos, object oextents, object ocolor)
 object PyEnvironmentBase::drawboxarray(object opos, object oextents, object ocolors)
 {
     std::vector<RaveVector<float> > vcolors;
-    size_t numcolors = 1;
+    size_t numcolors = 0;
     if( !IS_PYTHONOBJECT_NONE(ocolors) ) {
         numcolors = _getListVector(ocolors, vcolors, 4);
-    } else {
-        RaveVector<float> vcolor(1,0.5,0.5,1);
-        vcolors.emplace_back(vcolor);
     }
     std::vector<RaveVector<float> > vvectors;
     const size_t numpos = _getListVector(opos, vvectors, 3);
     if (numpos <= 0) {
-        throw OpenRAVEException("a list of positions is empty",ORE_InvalidArguments);
+        throw OpenRAVEException("a list of positions is empty", ORE_InvalidArguments);
     }
-    if (numcolors == 1 || numpos != numcolors) {
+    if (numcolors > 0 && numpos != numcolors) {
         throw OpenRAVEException("number of positions and colors mismatch", ORE_InvalidArguments);
     }
     return toPyGraphHandle(_penv->drawboxarray(vvectors, ExtractVector3(oextents), vcolors));
