@@ -444,7 +444,7 @@ void RobotBase::ConnectedBody::ExtractInfo(RobotBase::ConnectedBodyInfo& info) c
     for(size_t iLinkInfo = 0; iLinkInfo < _info._vLinkInfos.size(); ++iLinkInfo) {
         info._vLinkInfos[iLinkInfo].reset(new KinBody::LinkInfo());
         *info._vLinkInfos[iLinkInfo] = *_info._vLinkInfos[iLinkInfo];
-        for(size_t iGeometryInfo = 0; iGeometryInfo < _info._vLinkInfos[iLinkInfo]->_vgeometryinfos.size(); ++iGeometryInfo) {
+        for(size_t iGeometryInfo = 0; iGeometryInfo < _info._vLinkInfos[iLinkInfo]->_vgeometryinfos.size(); ++iGeometryInfo){
             info._vLinkInfos[iLinkInfo]->_vgeometryinfos[iGeometryInfo].reset(new KinBody::GeometryInfo());
             *info._vLinkInfos[iLinkInfo]->_vgeometryinfos[iGeometryInfo] = *_info._vLinkInfos[iLinkInfo]->_vgeometryinfos[iGeometryInfo];
         }
@@ -571,36 +571,8 @@ const std::string& RobotBase::ConnectedBody::GetInfoHash() const
         dReal fUnitScale = 1.0;
         int options = 0;
         _info.SerializeJSON(doc, doc.GetAllocator(), fUnitScale, options);
-        {
-            // Remove entires that are not relevant to hash computation.
-            if( doc.HasMember("isActive") ) {
-                // Remove isActive so the state does not affect the hash
-                doc.RemoveMember("isActive");
-            }
-            if( doc.HasMember("joints") ) {
-                rapidjson::Value rJoints(rapidjson::kArrayType);
-                for( rapidjson::Value::ConstValueIterator itJoint = doc["joints"].Begin(); itJoint != doc["joints"].End(); ++itJoint ) {
-                    rapidjson::Value rJoint;
-                    rJoint.CopyFrom(*itJoint, doc.GetAllocator());
-                    const std::array<std::string, 7> removeNames = {
-                        "maxVel",
-                        "maxAccel",
-                        "maxJerk",
-                        "maxTorque",
-                        "maxIntertia",
-                        "lowerLimit",
-                        "upperLimit",
-                    };
-                    for( const std::string& removeName: removeNames ) {
-                        if( rJoint.HasMember(removeName.c_str()) ) {
-                            rJoint.RemoveMember(removeName.c_str());
-                        }
-                    }
-                    rJoints.PushBack(rJoint, doc.GetAllocator());
-                } // end for joints
-                orjson::SetJsonValueByKey(doc, "joints", rJoints, doc.GetAllocator());
-            }
-        }
+        // set isActive to -1 so that its state does not affect the hash
+        orjson::SetJsonValueByKey(doc, "isActive", -1, doc.GetAllocator());
         __hashinfo = utils::GetMD5HashString(orjson::DumpJson(doc));
     }
     return __hashinfo;
