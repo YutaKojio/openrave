@@ -22,9 +22,9 @@
 #ifndef  OPENRAVE_ENVIRONMENTBASE_H
 #define  OPENRAVE_ENVIRONMENTBASE_H
 
-namespace OpenRAVE {
-
 #include <openrave/config.h>
+
+namespace OpenRAVE {
 
 #if OPENRAVE_ENVIRONMENT_RECURSIVE_LOCK
 #if OPENRAVE_STD_SCOPED_LOCK

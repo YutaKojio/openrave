@@ -58,9 +58,7 @@
 #include <fstream>
 #include <sstream>
 
-namespace OpenRAVE {
 #include <openrave/config.h>
-}
 
 #if OPENRAVE_STD_STRING_VIEW
 #include <string_view>
