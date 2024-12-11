@@ -1050,6 +1050,11 @@ object PyReadablesContainer::GetReadableInterface(const std::string& id)
     return toPyReadable(_pbase->GetReadableInterface(id));
 }
 
+bool PyReadablesContainer::HasReadableInterface(const std::string& id)
+{
+    return _pbase->HasReadableInterface(id);
+}
+
 void PyReadablesContainer::SetReadableInterface(const std::string& id, object oreadable)
 {
     _pbase->SetReadableInterface(id,ExtractReadable(oreadable));
@@ -3491,6 +3496,7 @@ Because race conditions can pop up when trying to lock the openrave environment 
         .def("GetReadableInterfaces",&PyReadablesContainer::GetReadableInterfaces, DOXY_FN(ReadablesContainer,GetReadableInterfaces))
         .def("GetReadableInterface",&PyReadablesContainer::GetReadableInterface, DOXY_FN(ReadablesContainer,GetReadableInterface))
         .def("SetReadableInterface",&PyReadablesContainer::SetReadableInterface, PY_ARGS("id","readable") DOXY_FN(ReadablesContainer,SetReadableInterface))
+        .def("HasReadableInterface",&PyReadablesContainer::HasReadableInterface, DOXY_FN(ReadablesContainer,HasReadableInterface))
         ;
 
 #ifdef USE_PYBIND11_PYTHON_BINDINGS
