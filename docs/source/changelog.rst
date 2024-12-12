@@ -3,6 +3,11 @@
 ChangeLog
 #########
 
+Version 0.158.1
+===============
+
+- Set OPENRAVE_STD_SCOPED_LOCK and OPENRAVE_STD_STRING_VIEW by config.h (avoid cplusplus in openrave.h)
+
 Version 0.158.0
 ===============
 
