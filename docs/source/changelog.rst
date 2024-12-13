@@ -3,10 +3,15 @@
 ChangeLog
 #########
 
-Version 0.158.1
+Version 0.158.2
 ===============
 
 - Make the connected body's joint properties (such as velocity/acceleration limits) persistent by always keeping the connected body's `_info` up to date.
+
+Version 0.158.1
+===============
+
+- Set OPENRAVE_STD_SCOPED_LOCK and OPENRAVE_STD_STRING_VIEW by config.h (avoid cplusplus in openrave.h)
 
 Version 0.158.0
 ===============
