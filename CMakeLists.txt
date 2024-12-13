@@ -115,22 +115,6 @@ include(GNUInstallDirs)
 find_package(PkgConfig) # pkg_check_modules
 
 check_cxx_source_compiles(" 
-#include <mutex> 
-int main() 
-{ 
-    std::scoped_lock lock;
-    return 0;
-}"
-OPENRAVE_STD_SCOPED_LOCK
-)
-# need to convert to int to set config.h
-if(OPENRAVE_STD_SCOPED_LOCK)
-  set(OPENRAVE_STD_SCOPED_LOCK 1)
-else()
-  set(OPENRAVE_STD_SCOPED_LOCK 0)
-endif()
-
-check_cxx_source_compiles(" 
 #include <string_view> 
 int main() 
 { 
@@ -139,6 +123,7 @@ int main()
 }"
 OPENRAVE_STD_STRING_VIEW
 )
+# need to convert to int to set config.h
 if(OPENRAVE_STD_STRING_VIEW)
   set(OPENRAVE_STD_STRING_VIEW 1)
 else()
