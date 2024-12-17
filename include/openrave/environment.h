@@ -482,6 +482,22 @@ public:
 
     virtual void Add(InterfaceBasePtr pinterface, bool bAnonymous, const std::string& cmdargs=std::string()) RAVE_DEPRECATED;
 
+    /** \brief Add an body to the environment
+        \param[in] pbody the pointer to an initialized body
+        \param[in] addMode One of IAM_X
+        \param[in] requestedEnvironmentBodyIndex if positive and none of existing body uses it, this is assigned to pbody. If positive and existing body uses it, exception is thrown. If non-positive, environment body index is decided internally.
+        \throw openrave_exception Throw if interface is invalid or already added
+     */
+    virtual void AddKinBody(KinBodyPtr pbody, InterfaceAddMode addMode, int requestedEnvironmentBodyIndex) = 0;
+
+    /** \brief Add an robot to the environment
+        \param[in] probot the pointer to an initialized robot
+        \param[in] addMode One of IAM_X
+        \param[in] requestedEnvironmentBodyIndex if positive and none of existing body uses it, this is assigned to probot. If positive and existing body uses it, exception is thrown. If non-positive, environment body index is decided internally.
+        \throw openrave_exception Throw if interface is invalid or already added
+     */
+    virtual void AddRobot(RobotBasePtr probot, InterfaceAddMode addMode, int requestedEnvironmentBodyIndex) = 0;
+
     /// \brief bodycallback(body, action)
     ///
     /// \param body KinBodyPtr
