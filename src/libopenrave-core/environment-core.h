@@ -3289,7 +3289,7 @@ public:
                 }
 
                 // re-grab after add this body back to the environment
-                for (int grabbingBodyIndex = 0; grabbingBodyIndex<pGrabbingBodies.size(); grabbingBodyIndex++) {
+                for (int grabbingBodyIndex = 0; grabbingBodyIndex < (int)pGrabbingBodies.size(); grabbingBodyIndex++) {
                     pGrabbingBodies[grabbingBodyIndex]->Grab(pInitBody, pGrabbingLinks[grabbingBodyIndex], linkIndicesToIgnore[grabbingBodyIndex], rGrabbedUserDataDocuments[grabbingBodyIndex]);
                 }
             }
@@ -3340,7 +3340,7 @@ public:
 
             if (itExistingBody != vBodies.end()) {
                 // grabbed infos
-                if (pKinBodyInfo->_vGrabbedInfos.size() != (*itExistingBody)->GetNumGrabbed()) {
+                if ((int)pKinBodyInfo->_vGrabbedInfos.size() != (*itExistingBody)->GetNumGrabbed()) {
                     RAVELOG_DEBUG_FORMAT("env=%s, body name='%s' updating grab from %d -> %d", GetNameId()%bodyName%(*itExistingBody)->GetNumGrabbed()%pKinBodyInfo->_vGrabbedInfos.size());
                     // when grab info changes, have to report to caller
                     if (std::find(vModifiedBodies.begin(), vModifiedBodies.end(), *itExistingBody) == vModifiedBodies.end() && std::find(vCreatedBodies.begin(), vCreatedBodies.end(), *itExistingBody) == vCreatedBodies.end()) {
