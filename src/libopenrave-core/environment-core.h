@@ -3128,7 +3128,7 @@ public:
                 } else {
                     updateFromInfoResult = pMatchExistingBody->UpdateFromKinBodyInfo(*pKinBodyInfo);
                 }
-                RAVELOG_VERBOSE_FORMAT("env=%s, update body '%s' from info result %d", GetNameId() % pMatchExistingBody->_id % static_cast<int>updateFromInfoResult);
+                RAVELOG_VERBOSE_FORMAT("env=%s, update body '%s' from info result %d", GetNameId() % pMatchExistingBody->_id % static_cast<int>(updateFromInfoResult));
                 if (updateFromInfoResult == UFIR_NoChange) {
                     continue;
                 }
