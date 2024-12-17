@@ -4230,6 +4230,7 @@ protected:
                 if ((size_t) envBodyIndex < _vecbodies.size() && !!_vecbodies.at(envBodyIndex)) {
                     throw OPENRAVE_EXCEPTION_FORMAT(_("env=%s, environmentBodyIndex=%d is used by existing body=%s while trying to add new body=%s"), GetNameId() % requestedEnvironmentBodyIndex % _vecbodies.at(envBodyIndex)->GetName() % pbody->GetName(), ORE_EnvironmentBodyIndexConflict);
                 }
+                RAVELOG_VERBOSE_FORMAT("env=%s, use requested envBodyIndex=%d for '%s'. %d remaining in pool", GetNameId()%envBodyIndex%pbody->GetName()%_environmentIndexRecyclePool.size());
             }
         }
         else {
