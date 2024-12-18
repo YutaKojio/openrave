@@ -3,6 +3,12 @@
 ChangeLog
 #########
 
+Version 0.159.1
+===============
+
+- Fix the problem that connected body resolved joint names that are empty are not skipped in `_UpdateConnectedBodyInfo`.
+- Fix the problem that `CompareTransform` does not consider the quaternions `quat` and `-quat` to be the same rotation.
+
 Version 0.159.0
 ===============
 
