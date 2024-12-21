@@ -3,6 +3,11 @@
 ChangeLog
 #########
 
+Version 0.159.1
+===============
+
+- Fix wrong ComputeInverseDynamics for Prismatic joint.
+
 Version 0.159.0
 ===============
 
