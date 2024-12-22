@@ -3,6 +3,12 @@
 ChangeLog
 #########
 
+Version 0.160.0
+===============
+
+- Add new functions for AddKinBody/AddRobot to specify an exact environmentBodyIndex.
+- Use std::unique_lock instead of std::scoped_lock. Remove boost recursive mutex.
+
 Version 0.159.1
 ===============
 
