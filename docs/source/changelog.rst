@@ -3,6 +3,25 @@
 ChangeLog
 #########
 
+Version 0.160.0
+===============
+
+- Add new functions for AddKinBody/AddRobot to specify an exact environmentBodyIndex.
+- Use std::unique_lock instead of std::scoped_lock. Remove boost recursive mutex.
+
+Version 0.159.1
+===============
+
+- Fix the problem that connected body resolved joint names that are empty are not skipped in `_UpdateConnectedBodyInfo`.
+- Fix the problem that `CompareTransform` does not consider the quaternions `quat` and `-quat` to be the same rotation.
+- Fix wrong ComputeInverseDynamics for Prismatic joint.
+
+Version 0.159.0
+===============
+
+- Add HasReadableInterface API to minimize copying when using python bindings
+- Make the connected body's joint properties (such as velocity/acceleration limits) persistent by always keeping the connected body's `_info` up to date.
+
 Version 0.158.1
 ===============
 
