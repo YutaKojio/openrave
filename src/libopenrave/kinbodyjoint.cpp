@@ -1913,9 +1913,10 @@ dReal KinBody::Joint::_GetTorqueLimitFromSpeedTorquePoints(const int iaxis,
                                                            const dReal fDefaultTorqueLimit) const
 {
     if( vSpeedTorquePoints.size() > 0 ) {
+        const std::pair<dReal, dReal>& firstSpeedTorquePoint = vSpeedTorquePoints[0];
         if( vSpeedTorquePoints.size() == 1 ) {
             // doesn't matter what the velocity is
-            return vSpeedTorquePoints.at(0).second*electricMotorActuatorInfo.gear_ratio;
+            return firstSpeedTorquePoint.second*electricMotorActuatorInfo.gear_ratio;
         }
 
         const dReal rawvelocity = GetVelocity(iaxis);
@@ -1925,17 +1926,19 @@ dReal KinBody::Joint::_GetTorqueLimitFromSpeedTorquePoints(const int iaxis,
             revolutionsPerSecond /= 2*M_PI;
         }
 
-        if( revolutionsPerSecond <= vSpeedTorquePoints.at(0).first ) {
-            return vSpeedTorquePoints.at(0).second*electricMotorActuatorInfo.gear_ratio;
+        if( revolutionsPerSecond <= firstSpeedTorquePoint.first ) {
+            return firstSpeedTorquePoint.second*electricMotorActuatorInfo.gear_ratio;
         }
 
         for(size_t i = 1; i < vSpeedTorquePoints.size(); ++i) {
-            if( revolutionsPerSecond <= vSpeedTorquePoints.at(i).first ) {
+            const std::pair<dReal, dReal>& speedTorquePoint1 = vSpeedTorquePoints[i];
+            if( revolutionsPerSecond <= speedTorquePoint1.first ) {
                 // linearly interpolate to get the desired torque
-                const dReal rps0 = vSpeedTorquePoints.at(i-1).first;
-                const dReal torque0 = vSpeedTorquePoints.at(i-1).second;
-                const dReal rps1 = vSpeedTorquePoints.at(i).first;
-                const dReal torque1 = vSpeedTorquePoints.at(i).second;
+                const std::pair<dReal, dReal>& speedTorquePoint0 = vSpeedTorquePoints[i-1];
+                const dReal rps0 = speedTorquePoint0.first;
+                const dReal torque0 = speedTorquePoint0.second;
+                const dReal rps1 = speedTorquePoint1.first;
+                const dReal torque1 = speedTorquePoint1.second;
                 if( rps1 - rps0 <= g_fEpsilonLinear ) {
                     return torque1*electricMotorActuatorInfo.gear_ratio;
                 }
