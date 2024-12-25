@@ -1975,6 +1975,7 @@ std::pair<dReal, dReal> KinBody::Joint::GetInstantaneousTorqueLimits(int iaxis) 
     else {
         const ElectricMotorActuatorInfo& electricMotorActuatorInfo = *_info._infoElectricMotor;
         const dReal fLimit = _GetTorqueLimitFromSpeedTorquePoints(iaxis, electricMotorActuatorInfo, electricMotorActuatorInfo.max_speed_torque_points, electricMotorActuatorInfo.max_instantaneous_torque);
+        // TODO : if we'll need to consider the back electromotive force (emf), re-think the formulation and then add the corrsponding parameters to ElectricMotorActuatorInfo
         return std::make_pair(-fLimit, fLimit);
     }
 }
@@ -1987,6 +1988,7 @@ std::pair<dReal, dReal> KinBody::Joint::GetNominalTorqueLimits(int iaxis) const
     else {
         const ElectricMotorActuatorInfo& electricMotorActuatorInfo = *_info._infoElectricMotor;
         const dReal fLimit = _GetTorqueLimitFromSpeedTorquePoints(iaxis, electricMotorActuatorInfo, electricMotorActuatorInfo.nominal_speed_torque_points, electricMotorActuatorInfo.nominal_torque);
+        // TODO : if we'll need to consider the back electromotive force (emf), re-think the formulation and then add the corrsponding parameters to ElectricMotorActuatorInfo
         return std::make_pair(-fLimit, fLimit);
     }
 }
