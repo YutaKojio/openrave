@@ -1913,42 +1913,46 @@ dReal KinBody::Joint::GetMaxTorque(int iaxis) const
         return _info._vmaxtorque.at(iaxis);
     }
     else {
-        if( _info._infoElectricMotor->max_speed_torque_points.size() > 0 ) {
-            if( _info._infoElectricMotor->max_speed_torque_points.size() == 1 ) {
+        const ElectricMotorActuatorInfo& electricMotorActuatorInfo = *_info._infoElectricMotor;
+        const std::vector<std::pair<dReal, dReal> >& vSpeedTorquePoints = electricMotorActuatorInfo.max_speed_torque_points;
+        if( vSpeedTorquePoints.size() > 0 ) {
+            if( vSpeedTorquePoints.size() == 1 ) {
                 // doesn't matter what the velocity is
-                return _info._infoElectricMotor->max_speed_torque_points.at(0).second*_info._infoElectricMotor->gear_ratio;
+                return vSpeedTorquePoints.at(0).second*electricMotorActuatorInfo.gear_ratio;
             }
 
-            dReal velocity = RaveFabs(GetVelocity(iaxis));
-            dReal revolutionsPerSecond = _info._infoElectricMotor->gear_ratio * velocity;
+            const dReal rawvelocity = GetVelocity(iaxis);
+            const dReal velocity = RaveFabs(rawvelocity);
+            dReal revolutionsPerSecond = electricMotorActuatorInfo.gear_ratio * velocity;
             if( IsRevolute(iaxis) ) {
                 revolutionsPerSecond /= 2*M_PI;
             }
 
-            if( revolutionsPerSecond <= _info._infoElectricMotor->max_speed_torque_points.at(0).first ) {
-                return _info._infoElectricMotor->max_speed_torque_points.at(0).second*_info._infoElectricMotor->gear_ratio;
+            if( revolutionsPerSecond <= vSpeedTorquePoints.at(0).first ) {
+                return vSpeedTorquePoints.at(0).second*electricMotorActuatorInfo.gear_ratio;
             }
 
-            for(size_t i = 1; i < _info._infoElectricMotor->max_speed_torque_points.size(); ++i) {
-                if( revolutionsPerSecond <= _info._infoElectricMotor->max_speed_torque_points.at(i).first ) {
+            for(size_t i = 1; i < vSpeedTorquePoints.size(); ++i) {
+                if( revolutionsPerSecond <= vSpeedTorquePoints.at(i).first ) {
                     // linearly interpolate to get the desired torque
-                    dReal rps0 = _info._infoElectricMotor->max_speed_torque_points.at(i-1).first;
-                    dReal torque0 = _info._infoElectricMotor->max_speed_torque_points.at(i-1).second;
-                    dReal rps1 = _info._infoElectricMotor->max_speed_torque_points.at(i).first;
-                    dReal torque1 = _info._infoElectricMotor->max_speed_torque_points.at(i).second;
+                    const dReal rps0 = vSpeedTorquePoints.at(i-1).first;
+                    const dReal torque0 = vSpeedTorquePoints.at(i-1).second;
+                    const dReal rps1 = vSpeedTorquePoints.at(i).first;
+                    const dReal torque1 = vSpeedTorquePoints.at(i).second;
                     if( rps1 - rps0 <= g_fEpsilonLinear ) {
-                        return torque1*_info._infoElectricMotor->gear_ratio;
+                        return torque1*electricMotorActuatorInfo.gear_ratio;
                     }
-
-                    return ((revolutionsPerSecond - rps0)/(rps1 - rps0)*(torque1-torque0) + torque0)*_info._infoElectricMotor->gear_ratio;
+                    else {
+                        return ((revolutionsPerSecond - rps0)/(rps1 - rps0)*(torque1-torque0) + torque0)*electricMotorActuatorInfo.gear_ratio;
+                    }
                 }
             }
 
             // revolutionsPerSecond is huge, return the last point
-            return _info._infoElectricMotor->max_speed_torque_points.back().second*_info._infoElectricMotor->gear_ratio;
+            return vSpeedTorquePoints.back().second*electricMotorActuatorInfo.gear_ratio;
         }
         else {
-            return _info._infoElectricMotor->max_instantaneous_torque*_info._infoElectricMotor->gear_ratio;
+            return electricMotorActuatorInfo.max_instantaneous_torque*electricMotorActuatorInfo.gear_ratio;
         }
     }
 }
