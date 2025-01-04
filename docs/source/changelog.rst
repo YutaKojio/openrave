@@ -3,10 +3,16 @@
 ChangeLog
 #########
 
-Version 0.160.1
+Version 0.161.1
 ===============
 
 - Apply ramp acceleration modification the same way as is done in `SegmentFeasible2` when initializing an input trajectory that is quadratic.
+
+Version 0.161.0
+===============
+
+- Remove the code for back electromotive force from torque limit calculation APIs.
+- Add common utility function for torque limit calculation.
 
 Version 0.160.0
 ===============
