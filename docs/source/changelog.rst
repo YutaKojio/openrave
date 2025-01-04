@@ -3,6 +3,11 @@
 ChangeLog
 #########
 
+Version 0.161.1
+===============
+
+- Expose toAttributeList from openravepy library.
+
 Version 0.161.0
 ===============
 
