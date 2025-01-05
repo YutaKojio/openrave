@@ -3,10 +3,15 @@
 ChangeLog
 #########
 
-Version 0.161.1
+Version 0.161.2
 ===============
 
 - Apply ramp acceleration modification the same way as is done in `SegmentFeasible2` when initializing an input trajectory that is quadratic.
+
+Version 0.161.1
+===============
+
+- Expose toAttributeList from openravepy library.
 
 Version 0.161.0
 ===============
