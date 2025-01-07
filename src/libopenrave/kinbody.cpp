@@ -4787,7 +4787,7 @@ void KinBody::_ComputeInternalInformation()
             else {
                 // NOTE: possibly try to choose roots that do not involve mimic joints. ikfast might have problems
                 // dealing with very complex formulas
-                LinkPtr plink0 = joint.GetFirstAttached(), plink1 = joint.GetSecondAttached();
+                const LinkPtr& plink0 = joint.GetFirstAttached(), plink1 = joint.GetSecondAttached();
                 if( vlinkdepths[plink0->GetIndex()] < vlinkdepths[plink1->GetIndex()] ) {
                     parentlinkindex = plink0->GetIndex();
                 }
@@ -4909,7 +4909,7 @@ void KinBody::_ComputeInternalInformation()
                 stringstream ss;
                 ss << GetName() << " closedloop found: ";
                 FOREACH(itlinkindex,*itclosedloop) {
-                    LinkPtr plink = _veclinks.at(*itlinkindex);
+                    const LinkPtr& plink = _veclinks.at(*itlinkindex);
                     ss << plink->GetName() << "(" << plink->GetIndex() << ") ";
                 }
                 RAVELOG_VERBOSE(ss.str());
@@ -4954,7 +4954,7 @@ void KinBody::_ComputeInternalInformation()
 
         // breadth first search for rigid links
         for(size_t icurlink = 0; icurlink<vattachedlinks.size(); ++icurlink) {
-            LinkPtr plink=_veclinks.at(vattachedlinks[icurlink]);
+            const LinkPtr& plink = _veclinks.at(vattachedlinks[icurlink]);
             FOREACHC(itjoint, _vecjoints) {
                 if( (*itjoint)->IsStatic() ) {
                     if(((*itjoint)->GetFirstAttached() == plink)&& !!(*itjoint)->GetSecondAttached() &&(find(vattachedlinks.begin(),vattachedlinks.end(),(*itjoint)->GetSecondAttached()->GetIndex()) == vattachedlinks.end())) {
