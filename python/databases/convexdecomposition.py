@@ -260,7 +260,6 @@ class ConvexDecompositionModel(DatabaseGenerator):
                         link.GetGeometries()[ig].SetCollisionMesh(self.GenerateTrimeshFromHulls(hulls))
 
     def getfilename(self,read=False):
-        filename = 'convexdecomposition_%.3f.pp'%self._padding
         return RaveFindDatabaseFile(os.path.join('robot.'+self.robot.GetKinematicsGeometryHash(), 'convexdecomposition_%.3f.pp'%self._padding),read)
     
     def autogenerate(self,options=None):
