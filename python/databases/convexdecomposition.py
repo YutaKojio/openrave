@@ -571,6 +571,11 @@ class ConvexDecompositionModel(DatabaseGenerator):
                     ginfo._meshcollision.indices[ioffset:(ioffset+len(hull[1])),:] = hull[1]+voffset
                     voffset += len(hull[0])
                     ioffset += len(hull[1])
+                # check
+                nMaxMeshIndex = len(ginfo._meshcollision.vertices) - 1
+                for meshIndex in ginfo._meshcollision.indices:
+                    assert numpy.all(meshIndex >= 0) and numpy.all(meshIndex <= nMaxMeshIndex), 'env=%s, geometry(name=\"%s\";id=\"%s\";type=%d) has incorrect mesh indices %r in convexhull, which is out of range of vertices which size is %d.' % (self.robot.GetEnv().GetNameId(), geometries[ig].GetName(), geometries[ig].GetId(), geometries[ig].GetType(), meshIndex, len(ginfo._meshcollision.vertices))
+                # append
                 geometryinfos.append(ginfo)
             return geometryinfos
     
