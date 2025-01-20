@@ -3,10 +3,15 @@
 ChangeLog
 #########
 
-Version 0.161.3
+Version 0.161.4
 ===============
 
 - Apply ramp acceleration modification the same way as is done in `SegmentFeasible2` when initializing an input trajectory that is quadratic.
+
+Version 0.161.3
+===============
+
+- Fix for not respecting mustresolveuri in the json reader for invalid URIs.
 
 Version 0.161.2
 ===============
