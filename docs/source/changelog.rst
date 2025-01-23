@@ -3,6 +3,11 @@
 ChangeLog
 #########
 
+Version 0.162.0
+===============
+
+- Add combined SetTransformAndVelocity method to reduce _UpdateGrabbedBodies calls
+
 Version 0.161.3
 ===============
 

@@ -2966,6 +2966,20 @@ private:
      */
     virtual void SetTransform(const Transform& transform);
 
+    /// \brief Set both the transform and velocity of the body in one update
+    //
+    /// This call is more efficient than separately calling SetTransform/SetVelocity, especially if the body is grabbing other bodies
+    /// See SetTransform, SetVelocity
+    void SetTransformAndVelocity(const Transform& bodyTransform, const Vector& linearvel, const Vector& angularvel);
+
+private:
+    /// Set the transform of the body without invoking any post-processing. Internal use only.
+    void _SetTransformNoPostProcess(const Transform& transform);
+
+    /// Set the velocity of the body without invoking any post-processing. Internal use only.
+    bool _SetVelocityNoPostProcess(const Vector& linearvel, const Vector& angularvel);
+
+public:
     /// \brief Return an axis-aligned bounding box of the entire object in the world coordinate system.
     ///
     /// \brief bEnabledOnlyLinks if true, will only count links that are enabled. By default this is false
