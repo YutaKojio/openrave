@@ -3,10 +3,15 @@
 ChangeLog
 #########
 
-Version 0.161.4
+Version 0.162.1
 ===============
 
 - Apply ramp acceleration modification the same way as is done in `SegmentFeasible2` when initializing an input trajectory that is quadratic.
+
+Version 0.162.0
+===============
+
+- Add combined SetTransformAndVelocity method to reduce _UpdateGrabbedBodies calls
 
 Version 0.161.3
 ===============
