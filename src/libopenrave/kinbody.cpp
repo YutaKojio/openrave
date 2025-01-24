@@ -1437,46 +1437,66 @@ void KinBody::SubtractDOFValues(std::vector<dReal>& q1, const std::vector<dReal>
     }
 }
 
-// like apply transform except everything is relative to the first frame
-void KinBody::SetTransform(const Transform& bodyTransform)
+void KinBody::_SetTransformNoPostProcess(const Transform& bodyTransform)
 {
-    if( _veclinks.size() == 0 ) {
+    if (_veclinks.empty()) {
         return;
     }
+
     Transform baseLinkTransform = bodyTransform * _baseLinkInBodyTransform;
     Transform tbaseinv = _veclinks.front()->GetTransform().inverse();
     Transform tapply = baseLinkTransform * tbaseinv;
     FOREACH(itlink, _veclinks) {
         (*itlink)->SetTransform(tapply * (*itlink)->GetTransform());
     }
+}
+
+bool KinBody::_SetVelocityNoPostProcess(const Vector& linearvel, const Vector& angularvel)
+{
+    if (_veclinks.empty()) {
+        return false;
+    }
+
+    bool bSuccess = false;
+    if (_veclinks.size() == 1) {
+        bSuccess = GetEnv()->GetPhysicsEngine()->SetLinkVelocity(_veclinks[0], linearvel, angularvel);
+    }
+    else {
+        std::vector<std::pair<Vector, Vector>>& velocities = _vVelocitiesCache;
+        velocities.resize(_veclinks.size());
+        velocities.at(0).first = linearvel;
+        velocities.at(0).second = angularvel;
+        Vector vlinktrans = _veclinks.at(0)->GetTransform().trans;
+        for (size_t ilink = 1; ilink < _veclinks.size(); ++ilink) {
+            velocities[ilink].first = linearvel + angularvel.cross(_veclinks[ilink]->GetTransform().trans - vlinktrans);
+            velocities[ilink].second = angularvel;
+        }
+
+        bSuccess = GetEnv()->GetPhysicsEngine()->SetLinkVelocities(shared_kinbody(), velocities);
+    }
+
+    return bSuccess;
+}
+
+void KinBody::SetTransformAndVelocity(const Transform& bodyTransform, const Vector& linearvel, const Vector& angularvel)
+{
+    _SetTransformNoPostProcess(bodyTransform);
+    _SetVelocityNoPostProcess(linearvel, angularvel);
+    _UpdateGrabbedBodies();
+    _PostprocessChangedParameters(Prop_LinkTransforms);
+}
+
+// like apply transform except everything is relative to the first frame
+void KinBody::SetTransform(const Transform& bodyTransform)
+{
+    _SetTransformNoPostProcess(bodyTransform);
     _UpdateGrabbedBodies();
     _PostprocessChangedParameters(Prop_LinkTransforms);
 }
 
 bool KinBody::SetVelocity(const Vector& linearvel, const Vector& angularvel)
 {
-    if (_veclinks.size() == 0) {
-        return false;
-    }
-
-    bool bSuccess = false;
-    if( _veclinks.size() == 1 ) {
-        bSuccess = GetEnv()->GetPhysicsEngine()->SetLinkVelocity(_veclinks[0], linearvel, angularvel);
-    }
-    else {
-        std::vector<std::pair<Vector,Vector> >& velocities = _vVelocitiesCache;
-        velocities.resize(_veclinks.size());
-        velocities.at(0).first = linearvel;
-        velocities.at(0).second = angularvel;
-        Vector vlinktrans = _veclinks.at(0)->GetTransform().trans;
-        for(size_t ilink = 1; ilink < _veclinks.size(); ++ilink) {
-            velocities[ilink].first = linearvel + angularvel.cross(_veclinks[ilink]->GetTransform().trans-vlinktrans);
-            velocities[ilink].second = angularvel;
-        }
-
-        bSuccess = GetEnv()->GetPhysicsEngine()->SetLinkVelocities(shared_kinbody(),velocities);
-    }
-
+    const bool bSuccess = _SetVelocityNoPostProcess(linearvel, angularvel);
     _UpdateGrabbedBodies();
     return bSuccess;
 }
