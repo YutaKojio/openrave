@@ -996,11 +996,11 @@ void KinBody::_UpdateGrabbedBodies()
         if( !!pGrabbedBody ) {
             const Transform& tGrabbingLink = pgrabbed->_pGrabbingLink->GetTransform();
             tGrabbedBody = tGrabbingLink * pgrabbed->_tRelative;
-            pGrabbedBody->SetTransform(tGrabbedBody);
-            // set the correct velocity
             pgrabbed->_pGrabbingLink->GetVelocity(velocity.first, velocity.second);
             velocity.first += velocity.second.cross(tGrabbedBody.trans - tGrabbingLink.trans);
-            pGrabbedBody->SetVelocity(velocity.first, velocity.second);
+            // Set the transform and velocity in one go so that we only cause one update of the grab sub-tree of this body
+            // If we update them separately, we duplicate work / can cause exponential wasted time for deeply nested grabs
+            pGrabbedBody->SetTransformAndVelocity(tGrabbedBody, velocity.first, velocity.second);
             ++grabIt;
         }
         else {

@@ -3,6 +3,16 @@
 ChangeLog
 #########
 
+Version 0.162.0
+===============
+
+- Add combined SetTransformAndVelocity method to reduce _UpdateGrabbedBodies calls
+
+Version 0.161.3
+===============
+
+- Fix for not respecting mustresolveuri in the json reader for invalid URIs.
+
 Version 0.161.2
 ===============
 
