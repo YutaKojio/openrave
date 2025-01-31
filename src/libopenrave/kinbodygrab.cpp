@@ -118,17 +118,29 @@ Grabbed::Grabbed(KinBodyPtr pGrabbedBody, KinBody::LinkPtr pGrabbingLink)
     _pGrabbedBody = pGrabbedBody;
     _pGrabbingLink = pGrabbingLink;
     _pGrabbingLink->GetRigidlyAttachedLinks(_vAttachedToGrabbingLink);
+
+    // If the grabbing body has no joints, then it is effectively a rigid body.
+    // When calculating non-colliding links, we exclude all links rigidly attached to the grabbing link.
+    // Since for fully rigid bodies _all_ links are attached, we effectively exclude all links.
+    // We can therefore skip the non-colliding calculation, along with generating the associated state savers.
+    KinBodyPtr pGrabber(pGrabbingLink->GetParent());
+    if (pGrabber->GetJoints().size() + pGrabber->GetPassiveJoints().size() == 0) {
+        // This body is fully rigid: all links are excluded from the non colliding link set, so just flag that the list is valid (empty) and return.
+        _listNonCollidingIsValid = true;
+        return;
+    }
+
+    // if this body is not rigid, then we need to save the current state of the grabber/grabbee so that we can roll back to it when computing the non-colliding links
     _listNonCollidingIsValid = false;
     const bool bDisableRestoreOnDestructor = true; // This is very important! These saver are used only in ComputeListNonCollidingLinks and we don't want to restore on destructor.
+    static const int saverOptions = KinBody::Save_LinkTransformation | KinBody::Save_LinkEnable | KinBody::Save_JointLimits;
     _CreateSaverForGrabbedAndGrabber(_pGrabbedSaver,
                                      pGrabbedBody,
-                                     KinBody::Save_LinkTransformation|KinBody::Save_LinkEnable|KinBody::Save_JointLimits,
+                                     saverOptions,
                                      bDisableRestoreOnDestructor);
-
-    KinBodyPtr pGrabber = RaveInterfaceCast<KinBody>(_pGrabbingLink->GetParent());
     _CreateSaverForGrabbedAndGrabber(_pGrabberSaver,
                                      pGrabber,
-                                     KinBody::Save_LinkTransformation|KinBody::Save_LinkEnable|KinBody::Save_JointLimits|KinBody::Save_LinkVelocities, // Need to save link velocities of the grabber since will be used for computing link velocities of the grabbed bodies.
+                                     saverOptions,
                                      bDisableRestoreOnDestructor);
 } // end Grabbed
 
@@ -162,7 +174,7 @@ void Grabbed::ComputeListNonCollidingLinks()
     KinBodyPtr pGrabbedBody(_pGrabbedBody);
     KinBodyPtr pGrabber = RaveInterfaceCast<KinBody>(_pGrabbingLink->GetParent());
     KinBody::KinBodyStateSaverPtr pCurrentGrabbedSaver, pCurrentGrabberSaver;
-    const int defaultSaveOptions = KinBody::Save_LinkTransformation|KinBody::Save_LinkEnable|KinBody::Save_LinkVelocities|KinBody::Save_JointLimits;
+    const int defaultSaveOptions = KinBody::Save_LinkTransformation|KinBody::Save_LinkEnable|KinBody::Save_JointLimits;
     const bool bDisableRestoreOnDestructor = false;
     _CreateSaverForGrabbedAndGrabber(pCurrentGrabbedSaver, pGrabbedBody, defaultSaveOptions, bDisableRestoreOnDestructor);
     _CreateSaverForGrabbedAndGrabber(pCurrentGrabberSaver, pGrabber, defaultSaveOptions, bDisableRestoreOnDestructor);
