@@ -270,6 +270,22 @@ static void AppendCylinderTriangulation(const Vector& pos, const dReal radius, c
     return AppendConicalFrustumTriangulation(pos, radius, radius, halfHeight, numverts, tri);
 }
 
+/// \brief check validity of mesh collision indices. if invalid, throw.
+/// \param[in] vertices, indices : coming from TriMesh
+/// \param[in] name, id, type : coming from GeometryInfo. used for exception message.
+/// \param[in] context : used for exception message.
+static void _CheckValidityOfMeshCollisionIndices(const std::vector<Vector>& vertices,
+                                                 const std::vector<int32_t>& indices,
+                                                 const std::string& name, const std::string& id, const GeometryType type, const char* context)
+{
+    for(const int32_t meshIndex : indices) {
+        if( (int)vertices.size() <= meshIndex || meshIndex < 0 ) {
+            throw OPENRAVE_EXCEPTION_FORMAT(_("geometry(name=\"%s\";id=\"%s\";type=%d) has incorrect mesh indices %d in \"%s\", which is out of range of vertices which size is %d."),
+                                            name%id%(int)type%context%meshIndex%vertices.size(), ORE_InvalidArguments);
+        }
+    }
+}
+
 void KinBody::GeometryInfo::GenerateCalibrationBoardDotMesh(TriMesh& tri, float fTessellation) const
 {
     // reset dots mesh
@@ -1645,6 +1661,8 @@ void KinBody::GeometryInfo::DeserializeJSON(const rapidjson::Value &value, const
     orjson::LoadJsonValueByKey(value, "diffuseColor", _vDiffuseColor);
     orjson::LoadJsonValueByKey(value, "ambientColor", _vAmbientColor);
     orjson::LoadJsonValueByKey(value, "modifiable", _bModifiable);
+
+    _CheckValidityOfMeshCollisionIndices( _meshcollision.vertices,  _meshcollision.indices, _name, _id, _type, __FUNCTION__);
 }
 
 inline void _UpdateExtrema(const Vector& v, Vector& vmin, Vector& vmax)

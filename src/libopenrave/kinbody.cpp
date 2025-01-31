@@ -100,6 +100,22 @@ protected:
     boost::function<void()> _fn;
 };
 
+/// \brief check validity of mesh collision indices. if invalid, throw.
+/// \param[in] vertices, indices : coming from TriMesh
+/// \param[in] name, id, type : coming from GeometryInfo. used for exception message.
+/// \param[in] context : used for exception message.
+static void _CheckValidityOfMeshCollisionIndices(const std::vector<Vector>& vertices,
+                                                 const std::vector<int32_t>& indices,
+                                                 const std::string& name, const std::string& id, const GeometryType type, const char* context)
+{
+    for(const int32_t meshIndex : indices) {
+        if( (int)vertices.size() <= meshIndex || meshIndex < 0 ) {
+            throw OPENRAVE_EXCEPTION_FORMAT(_("geometry(name=\"%s\";id=\"%s\";type=%d) has incorrect mesh indices %d in \"%s\", which is out of range of vertices which size is %d."),
+                                            name%id%(int)type%context%meshIndex%vertices.size(), ORE_InvalidArguments);
+        }
+    }
+}
+
 typedef boost::shared_ptr<ChangeCallbackData> ChangeCallbackDataPtr;
 
 bool KinBody::KinBodyInfo::operator==(const KinBodyInfo& other) const {
@@ -714,6 +730,12 @@ void KinBody::SetLinkGeometriesFromGroup(const std::string& geomname, const bool
 void KinBody::SetLinkGroupGeometries(const std::string& geomname, const std::vector< std::vector<KinBody::GeometryInfoPtr> >& linkgeometries)
 {
     OPENRAVE_ASSERT_OP( linkgeometries.size(), ==, _veclinks.size() );
+    for(const std::vector<KinBody::GeometryInfoPtr>& vGeometries : linkgeometries) {
+        for(const KinBody::GeometryInfoPtr& pGeometry : vGeometries) {
+            const KinBody::GeometryInfo& geometry = *pGeometry;
+            _CheckValidityOfMeshCollisionIndices(geometry._meshcollision.vertices, geometry._meshcollision.indices, geometry._name, geometry._id, geometry._type, __FUNCTION__);
+        }
+    }
     FOREACH(itlink, _veclinks) {
         Link& link = **itlink;
         std::map< std::string, std::vector<KinBody::GeometryInfoPtr> >::iterator it = link._info._mapExtraGeometries.insert(make_pair(geomname,std::vector<KinBody::GeometryInfoPtr>())).first;
