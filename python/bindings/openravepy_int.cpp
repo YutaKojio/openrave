@@ -256,7 +256,9 @@ void toRapidJSONValue(const object &obj, rapidjson::Value &value, rapidjson::Doc
 #if PY_MAJOR_VERSION >= 3
     else if (PyUnicode_Check(obj.ptr()))
     {
-        value.SetString(PyUnicode_AsUTF8(obj.ptr()), PyUnicode_GET_LENGTH(obj.ptr()), allocator);
+        ssize_t size;
+        const char *utf8 = PyUnicode_AsUTF8AndSize(obj.ptr(), &size);
+        value.SetString(utf8, size, allocator);
     }
 #else
     else if (PyString_Check(obj.ptr()))
