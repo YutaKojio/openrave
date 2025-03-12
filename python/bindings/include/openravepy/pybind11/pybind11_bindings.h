@@ -182,7 +182,7 @@ inline py::array_t<T> toPyArray(const boost::array<T, N>& v)
 #endif // OPENRAVE_BINDINGS_PYARRAY
 
 template <typename type>
-class PyOpenRAVEException : public py::object {
+class OPENRAVEPY_API PyOpenRAVEException : public py::object {
 public:
     PyOpenRAVEException() = default;
     PyOpenRAVEException(handle scope, const char *name, PyObject *base = PyExc_Exception, PyObject* dict = NULL) {

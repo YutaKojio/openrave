@@ -212,7 +212,7 @@ struct select_npy_type<bool>
 
 namespace openravepy {
 
-class PyVoidHandle
+class OPENRAVEPY_API PyVoidHandle
 {
 public:
     PyVoidHandle() {
@@ -225,7 +225,7 @@ public:
     OPENRAVE_SHARED_PTR<void> _handle;
 };
 
-class PyVoidHandleConst
+class OPENRAVEPY_API PyVoidHandleConst
 {
 public:
     PyVoidHandleConst() {
