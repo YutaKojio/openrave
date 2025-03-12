@@ -2322,18 +2322,23 @@ bool RobotBase::AddGripperInfo(GripperInfoPtr gripperInfo, bool removeduplicate)
         throw OPENRAVE_EXCEPTION_FORMAT(_("Cannot add gripperInfo to robot %s since its name is empty."),GetName(),ORE_InvalidArguments);
     }
 
+    int iremoveindex = -1;
     for(int igripper = 0; igripper < (int)_vecGripperInfos.size(); ++igripper) {
         if( _vecGripperInfos[igripper]->name == gripperInfo->name ) {
             if( removeduplicate ) {
-                _vecGripperInfos[igripper] = gripperInfo;
+                iremoveindex = igripper;
             }
             else {
-                throw OPENRAVE_EXCEPTION_FORMAT(_("gripper with name %s already exists"),gripperInfo->name,ORE_InvalidArguments);
+                throw OPENRAVE_EXCEPTION_FORMAT(_("gripper with name %s already exists"), gripperInfo->name, ORE_InvalidArguments);
             }
         }
     }
-
-    _vecGripperInfos.push_back(gripperInfo);
+    if( iremoveindex >= 0 ) {
+        _vecGripperInfos[iremoveindex] = gripperInfo;
+    }
+    else {
+        _vecGripperInfos.push_back(gripperInfo);
+    }
     return true;
 }
 
