@@ -3,6 +3,11 @@
 ChangeLog
 #########
 
+Version 0.163.0
+===============
+
+- Make classes in openravepy_int.so defined in the installed headers visible.
+
 Version 0.162.1
 ===============
 
