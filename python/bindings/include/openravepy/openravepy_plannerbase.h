@@ -23,7 +23,7 @@
 namespace openravepy {
 using py::object;
 
-class PyPlannerProgress
+class OPENRAVEPY_API PyPlannerProgress
 {
 public:
     PyPlannerProgress();
@@ -33,7 +33,7 @@ public:
 };
 
 
-class PyPlannerStatus
+class OPENRAVEPY_API PyPlannerStatus
 {
 public:
     PyPlannerStatus();
@@ -48,7 +48,7 @@ public:
     uint32_t statusCode = 0;
 };
 
-class PyPlannerBase : public PyInterfaceBase
+class OPENRAVEPY_API PyPlannerBase : public PyInterfaceBase
 {
 protected:
     PlannerBasePtr _pplanner;

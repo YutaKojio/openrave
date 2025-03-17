@@ -23,7 +23,7 @@
 namespace openravepy {
 using py::object;
 
-class PyControllerBase : public PyInterfaceBase
+class OPENRAVEPY_API PyControllerBase : public PyInterfaceBase
 {
 protected:
     ControllerBasePtr _pcontroller;
@@ -57,7 +57,7 @@ public:
     object GetTorque();
 };
 
-class PyMultiControllerBase : public PyControllerBase
+class OPENRAVEPY_API PyMultiControllerBase : public PyControllerBase
 {
 private:
     MultiControllerBasePtr _pmulticontroller;

@@ -23,7 +23,7 @@
 namespace openravepy {
 using py::object;
 
-class PyIkFailureInfo
+class OPENRAVEPY_API PyIkFailureInfo
 {
 public:
     PyIkFailureInfo(const IkFailureInfo& ikFailureInfo);
@@ -42,7 +42,7 @@ public:
 
 typedef OPENRAVE_SHARED_PTR<PyIkFailureInfo> PyIkFailureInfoPtr;
 
-class PyIkFailureAccumulatorBase
+class OPENRAVEPY_API PyIkFailureAccumulatorBase
 {
 public:
     PyIkFailureAccumulatorBase(IkFailureAccumulatorBasePtr pIkFailureAccumulator);
@@ -50,7 +50,7 @@ public:
     IkFailureAccumulatorBasePtr _pIkFailureAccumulator;
 };
 
-class PyIkReturn
+class OPENRAVEPY_API PyIkReturn
 {
 public:
     PyIkReturn(const IkReturn& ret);
@@ -72,7 +72,7 @@ public:
 
 typedef OPENRAVE_SHARED_PTR<PyIkReturn> PyIkReturnPtr;
 
-class PyIkSolverBase : public PyInterfaceBase
+class OPENRAVEPY_API PyIkSolverBase : public PyInterfaceBase
 {
 protected:
     IkSolverBasePtr _pIkSolver;
