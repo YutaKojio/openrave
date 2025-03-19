@@ -23,7 +23,7 @@
 namespace openravepy {
 using py::object;
 
-class PyPhysicsEngineBase : public PyInterfaceBase
+class OPENRAVEPY_API PyPhysicsEngineBase : public PyInterfaceBase
 {
 protected:
     PhysicsEngineBasePtr _pPhysicsEngine;

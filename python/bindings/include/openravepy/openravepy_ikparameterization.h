@@ -23,7 +23,7 @@
 namespace openravepy {
 using py::object;
 
-class PyIkParameterization
+class OPENRAVEPY_API PyIkParameterization
 {
 public:
     PyIkParameterization();
