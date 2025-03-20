@@ -3,6 +3,11 @@
 ChangeLog
 #########
 
+Version 0.163.1
+===============
+
+- Fix AddGripperInfo with removeduplicate=True did not remove duplicated gripperInfo.
+
 Version 0.163.0
 ===============
 
