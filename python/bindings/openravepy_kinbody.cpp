@@ -2505,6 +2505,7 @@ RobotBase::GrabbedInfoPtr PyKinBody::PyGrabbedInfo::GetGrabbedInfo() const
     pinfo->_id = _id;
     pinfo->_grabbedname = _grabbedname;
     pinfo->_robotlinkname = _robotlinkname;
+    pinfo->_grippername = _grippername;
     pinfo->_trelative = ExtractTransform(_trelative);
     pinfo->_setIgnoreRobotLinkNames = std::set<std::string>(begin(_setIgnoreRobotLinkNames), end(_setIgnoreRobotLinkNames));
 #else
@@ -2516,6 +2517,9 @@ RobotBase::GrabbedInfoPtr PyKinBody::PyGrabbedInfo::GetGrabbedInfo() const
     }
     if( !IS_PYTHONOBJECT_NONE(_robotlinkname) ) {
         pinfo->_robotlinkname = py::extract<std::string>(_robotlinkname);
+    }
+    if( !IS_PYTHONOBJECT_NONE(_grippername) ) {
+        pinfo->_grippername = py::extract<std::string>(_grippername);
     }
     if( !IS_PYTHONOBJECT_NONE(_trelative) ) {
         pinfo->_trelative = ExtractTransform(_trelative);
@@ -2574,10 +2578,12 @@ void PyKinBody::PyGrabbedInfo::_Update(const RobotBase::GrabbedInfo& info) {
     _id = info._id;
     _grabbedname = info._grabbedname;
     _robotlinkname = info._robotlinkname;
+    _grippername = info._grippername;
 #else
     _id = ConvertStringToUnicode(info._id);
     _grabbedname = ConvertStringToUnicode(info._grabbedname);
     _robotlinkname = ConvertStringToUnicode(info._robotlinkname);
+    _grippername = ConvertStringToUnicode(info._grippername);
 #endif
     _trelative = ReturnTransform(info._trelative);
 #ifdef USE_PYBIND11_PYTHON_BINDINGS
@@ -4848,21 +4854,23 @@ class GrabbedInfo_pickle_suite
 public:
     static py::tuple getstate(const PyKinBody::PyGrabbedInfo& r)
     {
-        return py::make_tuple(r._grabbedname, r._robotlinkname, r._trelative, r._setIgnoreRobotLinkNames);
+        return py::make_tuple(r._grabbedname, r._robotlinkname, r._grippername, r._trelative, r._setIgnoreRobotLinkNames);
     }
     static void setstate(PyKinBody::PyGrabbedInfo& r, py::tuple state) {
 #ifdef USE_PYBIND11_PYTHON_BINDINGS
         r._grabbedname = extract<std::string>(state[0]);
         r._robotlinkname = extract<std::string>(state[1]);
+        r._grippername = extract<std::string>(state[2]);
 #else
         r._grabbedname = state[0];
         r._robotlinkname = state[1];
+        r._grippername = state[2];
 #endif
-        r._trelative = state[2];
+        r._trelative = state[3];
 #ifdef USE_PYBIND11_PYTHON_BINDINGS
-        r._setIgnoreRobotLinkNames = extract<std::vector<std::string> >(state[3]);
+        r._setIgnoreRobotLinkNames = extract<std::vector<std::string> >(state[4]);
 #else
-        r._setIgnoreRobotLinkNames = state[3];
+        r._setIgnoreRobotLinkNames = state[4];
 #endif
     }
 };
@@ -5539,6 +5547,7 @@ void init_openravepy_kinbody()
                          .def_readwrite("_id",&PyKinBody::PyGrabbedInfo::_id)
                          .def_readwrite("_grabbedname",&PyKinBody::PyGrabbedInfo::_grabbedname)
                          .def_readwrite("_robotlinkname",&PyKinBody::PyGrabbedInfo::_robotlinkname)
+                         .def_readwrite("_grippername",&PyKinBody::PyGrabbedInfo::_grippername)
                          .def_readwrite("_trelative",&PyKinBody::PyGrabbedInfo::_trelative)
                          .def_readwrite("_grabbedUserData",&PyKinBody::PyGrabbedInfo::_grabbedUserData)
                          .def_readwrite("_setIgnoreRobotLinkNames",&PyKinBody::PyGrabbedInfo::_setIgnoreRobotLinkNames)

@@ -114,10 +114,12 @@ public:
         std::string _id;
         std::string _grabbedname;
         std::string _robotlinkname;
+        std::string _grippername;
 #else
         py::object _id = py::none_();
         py::object _grabbedname = py::none_();
         py::object _robotlinkname = py::none_();
+        py::object _grippername = py::none_();
 #endif
         py::object _trelative = ReturnTransform(Transform());
 #ifdef USE_PYBIND11_PYTHON_BINDINGS

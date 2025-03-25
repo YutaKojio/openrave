@@ -81,6 +81,7 @@ static void _GetOneGrabbedInfo(KinBody::GrabbedInfo& outputinfo,
 {
     outputinfo._grabbedname = pgrabbedbody->GetName();
     outputinfo._robotlinkname = pgrabbed->_pGrabbingLink->GetName();
+    // outputinfo._grippername = pgrabbed->_grippername;//TODO YOSHITO
     outputinfo._trelative = pgrabbed->_tRelative;
     outputinfo._setIgnoreRobotLinkNames.clear();
     CopyRapidJsonDoc(pgrabbed->_rGrabbedUserData, outputinfo._rGrabbedUserData);
@@ -758,6 +759,7 @@ bool KinBody::GrabbedInfo::operator==(const GrabbedInfo& other) const
     return _id == other._id
        && _grabbedname == other._grabbedname
        && _robotlinkname == other._robotlinkname
+       && _grippername == other._grippername
        && _trelative == other._trelative
        && _setIgnoreRobotLinkNames == other._setIgnoreRobotLinkNames
        && _rGrabbedUserData == other._rGrabbedUserData;
@@ -768,6 +770,7 @@ KinBody::GrabbedInfo& KinBody::GrabbedInfo::operator=(const GrabbedInfo& other)
     _id = other._id;
     _grabbedname = other._grabbedname;
     _robotlinkname = other._robotlinkname;
+    _grippername = other._grippername;
     _trelative = other._trelative;
     _setIgnoreRobotLinkNames = other._setIgnoreRobotLinkNames;
     _rGrabbedUserData = rapidjson::Document(); // reset allocator
@@ -780,6 +783,7 @@ void KinBody::GrabbedInfo::Reset()
     _id.clear();
     _grabbedname.clear();
     _robotlinkname.clear();
+    _grippername.clear();
     _trelative = Transform();
     _setIgnoreRobotLinkNames.clear();
     _rGrabbedUserData.SetNull();
@@ -792,6 +796,7 @@ void KinBody::GrabbedInfo::SerializeJSON(rapidjson::Value& value, rapidjson::Doc
     }
     orjson::SetJsonValueByKey(value, "grabbedName", _grabbedname, allocator);
     orjson::SetJsonValueByKey(value, "robotLinkName", _robotlinkname, allocator);
+    orjson::SetJsonValueByKey(value, "gripperName", _grippername, allocator);
     Transform transform = _trelative;
     transform.trans *= fUnitScale;
     orjson::SetJsonValueByKey(value, "transform", transform, allocator);
@@ -808,6 +813,7 @@ void KinBody::GrabbedInfo::DeserializeJSON(const rapidjson::Value& value, dReal 
     orjson::LoadJsonValueByKey(value, "id", _id);
     orjson::LoadJsonValueByKey(value, "grabbedName", _grabbedname);
     orjson::LoadJsonValueByKey(value, "robotLinkName", _robotlinkname);
+    orjson::LoadJsonValueByKey(value, "gripperName", _grippername);
     if (value.HasMember("transform")) {
         orjson::LoadJsonValueByKey(value, "transform", _trelative);
         _trelative.trans *= fUnitScale;
@@ -826,6 +832,7 @@ void KinBody::GrabbedInfo::serialize(std::ostream& os) const
 {
     os << _grabbedname << " ";
     os << _robotlinkname << " ";
+    os << _grippername << " ";
     SerializeRound(os, _trelative);
     for( std::set<std::string>::const_iterator it = _setIgnoreRobotLinkNames.begin(); it != _setIgnoreRobotLinkNames.end(); ++it ) {
         os << (*it) << " ";
