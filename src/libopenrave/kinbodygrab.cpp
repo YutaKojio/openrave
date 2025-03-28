@@ -81,7 +81,7 @@ static void _GetOneGrabbedInfo(KinBody::GrabbedInfo& outputinfo,
 {
     outputinfo._grabbedname = pgrabbedbody->GetName();
     outputinfo._robotlinkname = pgrabbed->_pGrabbingLink->GetName();
-    // outputinfo._grippername = pgrabbed->_grippername;//TODO YOSHITO
+    outputinfo._grippername = pgrabbed->_grippername;
     outputinfo._trelative = pgrabbed->_tRelative;
     outputinfo._setIgnoreRobotLinkNames.clear();
     CopyRapidJsonDoc(pgrabbed->_rGrabbedUserData, outputinfo._rGrabbedUserData);
@@ -334,16 +334,16 @@ bool KinBody::Grab(KinBodyPtr pGrabbedBody, LinkPtr pGrabbingLink, const rapidjs
     return Grab(pGrabbedBody, pGrabbingLink, setGrabberLinksToIgnore, rGrabbedUserData);
 }
 
-bool KinBody::Grab(KinBodyPtr pGrabbedBody, LinkPtr pGrabbingLink, const std::set<std::string>& setIgnoreGrabberLinkNames, const rapidjson::Value& rGrabbedUserData)
+bool KinBody::Grab(KinBodyPtr pGrabbedBody, LinkPtr pGrabbingLink, const std::set<std::string>& setIgnoreGrabberLinkNames, const rapidjson::Value& rGrabbedUserData, const std::string& grippername)
 {
     std::set<int> setGrabberLinksToIgnore;
     FOREACHC(itLinkName, setIgnoreGrabberLinkNames) {
         setGrabberLinksToIgnore.insert(GetLink(*itLinkName)->GetIndex());
     }
-    return Grab(pGrabbedBody, pGrabbingLink, setGrabberLinksToIgnore, rGrabbedUserData);
+    return Grab(pGrabbedBody, pGrabbingLink, setGrabberLinksToIgnore, rGrabbedUserData, grippername);
 }
 
-bool KinBody::Grab(KinBodyPtr pGrabbedBody, LinkPtr pGrabbingLink, const std::set<int>& setGrabberLinksToIgnore, const rapidjson::Value& rGrabbedUserData)
+bool KinBody::Grab(KinBodyPtr pGrabbedBody, LinkPtr pGrabbingLink, const std::set<int>& setGrabberLinksToIgnore, const rapidjson::Value& rGrabbedUserData, const std::string& grippername)
 {
     OPENRAVE_ASSERT_FORMAT(!!pGrabbedBody, "env=%s, body to be grabbed by body '%s' is invalid", GetEnv()->GetNameId()%GetName(), ORE_InvalidArguments);
     OPENRAVE_ASSERT_FORMAT(!!pGrabbingLink, "env=%s, pGrabbingLink of body '%s' for grabbing body '%s' is invalid", GetEnv()->GetNameId()%GetName()%pGrabbedBody->GetName(), ORE_InvalidArguments);
@@ -411,6 +411,7 @@ bool KinBody::Grab(KinBodyPtr pGrabbedBody, LinkPtr pGrabbingLink, const std::se
     }
 
     GrabbedPtr pGrabbed(new Grabbed(pGrabbedBody, pGrabbingLink));
+    pGrabbed->_grippername = grippername;
     pGrabbed->_tRelative = tGrabbingLink.inverse() * tGrabbedBody;
     pGrabbed->_setGrabberLinkIndicesToIgnore = setGrabberLinksToIgnore;
 
@@ -577,6 +578,7 @@ void KinBody::RegrabAll()
         }
 
         GrabbedPtr pNewGrabbed(new Grabbed(pBody, pGrabbed->_pGrabbingLink));
+        pGrabbed->_grippername = pGrabbed->_grippername;
         pNewGrabbed->_tRelative = pGrabbed->_tRelative;
         pNewGrabbed->_setGrabberLinkIndicesToIgnore = pGrabbed->_setGrabberLinkIndicesToIgnore;
         CopyRapidJsonDoc(pGrabbed->_rGrabbedUserData, pNewGrabbed->_rGrabbedUserData);
@@ -962,6 +964,7 @@ void KinBody::ResetGrabbed(const std::vector<KinBody::GrabbedInfoConstPtr>& vGra
 
         // Update the grab object with the ancillary grab info
         GrabbedPtr& pGrabbed = existingGrabIt->second;
+        pGrabbed->_grippername = pGrabbedInfo->_grippername;
         pGrabbed->_tRelative = pGrabbedInfo->_trelative;
         FOREACHC(itLinkName, pGrabbedInfo->_setIgnoreRobotLinkNames) {
             pGrabbed->_setGrabberLinkIndicesToIgnore.insert(GetLink(*itLinkName)->GetIndex());

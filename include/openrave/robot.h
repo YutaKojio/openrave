@@ -1274,7 +1274,7 @@ private:
         \param[in] rGrabbedUserData custom data to keep in Grabbed
         \return true if successful and body is grabbed.
      */
-    bool Grab(KinBodyPtr body, LinkPtr pRobotLinkToGrabWith, const std::set<int>& setRobotLinksToIgnore, const rapidjson::Value& rGrabbedUserData) override;
+    bool Grab(KinBodyPtr body, LinkPtr pRobotLinkToGrabWith, const std::set<int>& setRobotLinksToIgnore, const rapidjson::Value& rGrabbedUserData, const std::string& grippername=std::string()) override;
 
     /** \brief Grab the body with the specified link.
 
@@ -1285,7 +1285,7 @@ private:
         \param[in] rGrabbedUserData custom data to keep in Grabbed
         \return true if successful and body is grabbed.
      */
-    bool Grab(KinBodyPtr body, LinkPtr pBodyLinkToGrabWith, const std::set<std::string>& setIgnoreBodyLinkNames, const rapidjson::Value& rGrabbedUserData) override;
+    bool Grab(KinBodyPtr body, LinkPtr pBodyLinkToGrabWith, const std::set<std::string>& setIgnoreBodyLinkNames, const rapidjson::Value& rGrabbedUserData, const std::string& grippername=std::string()) override;
 
     /** \brief Grab a body with the specified link.
 

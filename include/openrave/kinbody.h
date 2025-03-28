@@ -3463,7 +3463,7 @@ public:
         \param[in] rGrabbedUserData custom data to keep in the body
         \return true if successful and body is grabbed.
      */
-    virtual bool Grab(KinBodyPtr body, LinkPtr pBodyLinkToGrabWith, const std::set<int>& setBodyLinksToIgnore, const rapidjson::Value& rGrabbedUserData);
+    virtual bool Grab(KinBodyPtr body, LinkPtr pBodyLinkToGrabWith, const std::set<int>& setBodyLinksToIgnore, const rapidjson::Value& rGrabbedUserData, const std::string& grippername=std::string());
 
     /** \brief Grab the body with the specified link.
 
@@ -3474,7 +3474,7 @@ public:
         \param[in] rGrabbedUserData custom data to keep in the body
         \return true if successful and body is grabbed.
      */
-    virtual bool Grab(KinBodyPtr body, LinkPtr pBodyLinkToGrabWith, const std::set<std::string>& setIgnoreBodyLinkNames, const rapidjson::Value& rGrabbedUserData);
+    virtual bool Grab(KinBodyPtr body, LinkPtr pBodyLinkToGrabWith, const std::set<std::string>& setIgnoreBodyLinkNames, const rapidjson::Value& rGrabbedUserData, const std::string& grippername=std::string());
 
     /** \brief Grab a body with the specified link.
 
@@ -3932,6 +3932,7 @@ public:
     // Member Variables
     KinBodyWeakPtr _pGrabbedBody; ///< the body being grabbed
     KinBody::LinkPtr _pGrabbingLink; ///< the link used for grabbing _pGrabbedBody. Its transform (as well as the transforms of other links rigidly attached to _pGrabbingLink) relative to the grabbed body remains constant until the grabbed body is released.
+    std::string _grippername;
     KinBody::ListNonCollidingLinkPairs _listNonCollidingGrabbedGrabberLinkPairsWhenGrabbed; ///< list of link pairs of the grabber that are not touching the grabbed body *at the time of grabbing*. Since these links are not colliding with the grabbed body at the time of grabbing, they should remain non-colliding with the grabbed body throughout. If, while grabbing, they collide with the grabbed body at some point, CheckSelfCollision should return true. It is important to note that the enable state of a link does *not* affect its membership of this list. Each pair in the list should be [Grabbed-link, Grabber-link]. Note that this does not contain link pairs from two grabbed bodies, c.f. KinBody::_mapListNonCollidingInterGrabbedLinkPairsWhenGrabbed.
     Transform _tRelative; ///< the relative transform between the grabbed body and the grabbing link. tGrabbingLink*tRelative = tGrabbedBody.
     std::set<int> _setGrabberLinkIndicesToIgnore; ///< indices to the links of the grabber whose collisions with the grabbed bodies should be ignored.
