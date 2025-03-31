@@ -438,11 +438,11 @@ public:
 
     object CalculateActiveAngularVelocityJacobian(int index) const;
 
-    bool Grab(PyKinBodyPtr pbody);
+    bool Grab(PyKinBodyPtr pbody, const string& grippername=std::string());
 
     // since PyKinBody::Grab is overloaded with (pbody, plink) parameters, have to support both...?
-    bool Grab(PyKinBodyPtr pbody, object pylink_or_linkstoignore);
-    bool Grab(PyKinBodyPtr pbody, object pylink, object linkstoignore, object grabbedUserData);
+    bool Grab(PyKinBodyPtr pbody, object pylink_or_linkstoignore, const string& grippername=std::string());
+    bool Grab(PyKinBodyPtr pbody, object pylink, object linkstoignore, object grabbedUserData, const string& grippername=std::string());
 
     bool CheckLinkSelfCollision(int ilinkindex, object olinktrans, PyCollisionReportPtr pyreport=PyCollisionReportPtr());
 
