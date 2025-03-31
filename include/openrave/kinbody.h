@@ -3483,7 +3483,7 @@ public:
         \param[in] rGrabbedUserData custom data to keep in the body
         \return true if successful and body is grabbed/
      */
-    virtual bool Grab(KinBodyPtr body, LinkPtr pBodyLinkToGrabWith, const rapidjson::Value& rGrabbedUserData);
+    virtual bool Grab(KinBodyPtr body, LinkPtr pBodyLinkToGrabWith, const rapidjson::Value& rGrabbedUserData, const std::string& grippername=std::string());
 
     /** \brief Release the body if grabbed.
 

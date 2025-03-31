@@ -1294,7 +1294,7 @@ private:
         \param[in] rGrabbedUserData custom data to keep in Grabbed
         \return true if successful and body is grabbed/
      */
-    bool Grab(KinBodyPtr body, LinkPtr pRobotLinkToGrabWith, const rapidjson::Value& rGrabbedUserData) override;
+    bool Grab(KinBodyPtr body, LinkPtr pRobotLinkToGrabWith, const rapidjson::Value& rGrabbedUserData, const std::string& grippername=std::string()) override;
 
     /** \brief Grabs the body with the active manipulator's end effector.
 
@@ -1304,7 +1304,7 @@ private:
         \param[in] rGrabbedUserData custom data to keep in Grabbed
         \return true if successful and body is grabbed
      */
-    virtual bool Grab(KinBodyPtr body, const std::set<int>& setRobotLinksToIgnore, const rapidjson::Value& rGrabbedUserData);
+    virtual bool Grab(KinBodyPtr body, const std::set<int>& setRobotLinksToIgnore, const rapidjson::Value& rGrabbedUserData, const std::string& grippername=std::string());
 
     /** \brief Grabs the body with the active manipulator's end effector.
 
@@ -1314,7 +1314,7 @@ private:
         \param[in] rGrabbedUserData custom data to keep in Grabbed
         \return true if successful and body is grabbed
      */
-    virtual bool Grab(KinBodyPtr body, const std::set<std::string>& setIgnoreBodyLinkNames, const rapidjson::Value& rGrabbedUserData);
+    virtual bool Grab(KinBodyPtr body, const std::set<std::string>& setIgnoreBodyLinkNames, const rapidjson::Value& rGrabbedUserData, const std::string& grippername=std::string());
 
     /** \brief Grabs the body with the active manipulator's end effector.
 
@@ -1322,7 +1322,7 @@ private:
         \param[in] rGrabbedUserData custom data to keep in Grabbed
         \return true if successful and body is grabbed
      */
-    virtual bool Grab(KinBodyPtr body, const rapidjson::Value& rGrabbedUserData);
+    virtual bool Grab(KinBodyPtr body, const rapidjson::Value& rGrabbedUserData, const std::string& grippername=std::string());
 
     //@}
 
