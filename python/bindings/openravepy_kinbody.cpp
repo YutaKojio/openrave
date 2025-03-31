@@ -4854,23 +4854,23 @@ class GrabbedInfo_pickle_suite
 public:
     static py::tuple getstate(const PyKinBody::PyGrabbedInfo& r)
     {
-        return py::make_tuple(r._grabbedname, r._robotlinkname, r._grippername, r._trelative, r._setIgnoreRobotLinkNames);
+        return py::make_tuple(r._grabbedname, r._robotlinkname, r._trelative, r._setIgnoreRobotLinkNames, r._grippername);
     }
     static void setstate(PyKinBody::PyGrabbedInfo& r, py::tuple state) {
 #ifdef USE_PYBIND11_PYTHON_BINDINGS
         r._grabbedname = extract<std::string>(state[0]);
         r._robotlinkname = extract<std::string>(state[1]);
-        r._grippername = extract<std::string>(state[2]);
+        r._grippername = extract<std::string>(state[4]);
 #else
         r._grabbedname = state[0];
         r._robotlinkname = state[1];
-        r._grippername = state[2];
+        r._grippername = state[4];
 #endif
-        r._trelative = state[3];
+        r._trelative = state[2];
 #ifdef USE_PYBIND11_PYTHON_BINDINGS
-        r._setIgnoreRobotLinkNames = extract<std::vector<std::string> >(state[4]);
+        r._setIgnoreRobotLinkNames = extract<std::vector<std::string> >(state[3]);
 #else
-        r._setIgnoreRobotLinkNames = state[4];
+        r._setIgnoreRobotLinkNames = state[3];
 #endif
     }
 };
