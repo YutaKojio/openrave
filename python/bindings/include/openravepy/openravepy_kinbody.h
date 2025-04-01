@@ -313,8 +313,8 @@ public:
     py::object GetConfigurationSpecificationIndices(py::object oindices,const std::string& interpolation="") const;
     void SetConfigurationValues(py::object ovalues, uint32_t checklimits=KinBody::CLA_CheckLimits);
     py::object GetConfigurationValues() const;
-    bool Grab(PyKinBodyPtr pbody, py::object pylink_or_linkstoignore);
-    bool Grab(PyKinBodyPtr pbody, py::object pylink, py::object linkstoignore, py::object grabbedUserData);
+    bool Grab(PyKinBodyPtr pbody, py::object pylink_or_linkstoignore, const string& grippername=std::string());
+    bool Grab(PyKinBodyPtr pbody, py::object pylink, py::object linkstoignore, py::object grabbedUserData, const string& grippername=std::string());
     void Release(PyKinBodyPtr pbody);
     void ReleaseAllGrabbed();
     void ReleaseAllGrabbedWithLink(py::object pylink);
