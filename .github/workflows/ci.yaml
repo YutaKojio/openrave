@@ -29,12 +29,12 @@ jobs:
         sudo apt-get -y install cmake-data cmake cmake-curses-gui ninja-build
     - name: Print cmake info
       run: |
-        rm /usr/local/bin/cmake
+        rm /usr/local/bin/cmake  # use cmake from apt # we need this after github runner goes to cmake 4.0.0
         cmake --version
         which cmake
     - name: Set up Python modules
       run: |
-        python3 -m pip install setuptools==75.8.0
+        python3 -m pip install setuptools==75.8.0  # explicitly installing setuptools causes installing distutils-precedence.pth
         python3 -m pip install nose==1.3.7 six==1.17.0
         python3 -m pip install numpy==2.1.3 IPython==8.18.1
         python3 -m pip install mpmath==1.3.0 sympy==1.13.3
