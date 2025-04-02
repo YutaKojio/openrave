@@ -8,15 +8,15 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ['3.9']
-        os: [ubuntu-20.04]
+        python-version: ['3.13']
+        os: [ubuntu-24.04]
         architecture: ["x64"]
 
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
       if: ${{ matrix.python-version != 'pyston' }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
         architecture: ${{ matrix.architecture }}
@@ -27,12 +27,17 @@ jobs:
         sudo apt-get -y install g++ gfortran git pkg-config debhelper gettext zlib1g-dev libminizip-dev libxml2-dev liburiparser-dev libpcre3-dev libgmp-dev libmpfr-dev qtbase5-dev libqt5opengl5-dev libavcodec-dev libavformat-dev libswscale-dev libsimage-dev libode-dev libqhull-dev libann-dev libhdf5-serial-dev liblapack-dev libboost-iostreams-dev libboost-regex-dev libboost-filesystem-dev libboost-system-dev libboost-thread-dev libboost-date-time-dev libboost-test-dev libmpfi-dev ffmpeg libtinyxml-dev libflann-dev sqlite3 libccd-dev libeigen3-dev libgpgme-dev libgpgmepp-dev
         sudo apt-get update -y
         sudo apt-get -y install cmake-data cmake cmake-curses-gui ninja-build
+    - name: Print cmake info
+      run: |
+        rm /usr/local/bin/cmake
+        cmake --version
+        which cmake
     - name: Set up Python modules
       run: |
-        python3 -m pip install nose==1.3.7 six==1.16.0
-        python3 -m pip install numpy==1.26.4 IPython==8.14.0
-        python3 -m pip install mpmath==0.19 sympy==1.11.1
-        python3 -m pip install scipy==1.10.1
+        python3 -m pip install nose==1.3.7 six==1.17.0
+        python3 -m pip install numpy==2.0.2 IPython==8.18.1
+        python3 -m pip install mpmath==1.3.0 sympy==1.13.3
+        python3 -m pip install scipy==1.13.1
     - name: Install RapidJSON
       run: |
         set -e
@@ -48,7 +53,7 @@ jobs:
         set -e
         git clone https://github.com/assimp/assimp.git && mkdir assimp/build
         cd assimp/build
-        git checkout v5.2.5
+        git checkout v5.4.3
         cmake .. -GNinja
         ninja -j4
         sudo ninja install
@@ -77,7 +82,7 @@ jobs:
         # git fetch woody
         git remote add ciel https://github.com/cielavenir/pybind11.git
         git fetch ciel
-        git checkout ciel/v2.9_ty
+        git checkout ciel/v2.13_ty
 
         cmake .. -GNinja -DPYBIND11_TEST=OFF -DPythonLibsNew_FIND_VERSION=3
         ninja -j4
