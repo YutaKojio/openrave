@@ -3,6 +3,11 @@
 ChangeLog
 #########
 
+Version 0.163.2
+===============
+
+- Do not set the 4th element of _vDiffuseColor to 1 when initializing KinBody.
+
 Version 0.163.1
 ===============
 
