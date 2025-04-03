@@ -278,7 +278,8 @@ void KinBody::JointInfo::SerializeJSON(rapidjson::Value& value, rapidjson::Docum
 
     orjson::SetJsonValueByKey(value, "id", _id, allocator);
     orjson::SetJsonValueByKey(value, "name", _name, allocator);
-    orjson::SetJsonValueByKey(value, "anchors", _vanchor, allocator);
+
+    orjson::SetJsonValueByKey(value, "anchors", fUnitScale*_vanchor, allocator);
     orjson::SetJsonValueByKey(value, "parentLinkName", _linkname0, allocator);
     orjson::SetJsonValueByKey(value, "childLinkName", _linkname1, allocator);
     orjson::SetJsonValueByKey(value, "axes", _vaxes, allocator);
