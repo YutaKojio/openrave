@@ -469,7 +469,10 @@ void KinBody::JointInfo::DeserializeJSON(const rapidjson::Value& value, dReal fU
     orjson::LoadJsonValueByKey(value, "id", _id);
 
     orjson::LoadJsonValueByKey(value, "parentLinkName", _linkname0);
-    orjson::LoadJsonValueByKey(value, "anchors", fUnitScale*_vanchor);
+    if (value.HasMember("anchors")) {
+        orjson::LoadJsonValueByKey(value, "anchors", _vanchor);
+        _vanchor *= fUnitScale;
+    }
     orjson::LoadJsonValueByKey(value, "childLinkName", _linkname1);
     orjson::LoadJsonValueByKey(value, "axes", _vaxes);
     orjson::LoadJsonValueByKey(value, "currentValues", _vcurrentvalues);
