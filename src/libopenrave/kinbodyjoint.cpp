@@ -278,7 +278,6 @@ void KinBody::JointInfo::SerializeJSON(rapidjson::Value& value, rapidjson::Docum
 
     orjson::SetJsonValueByKey(value, "id", _id, allocator);
     orjson::SetJsonValueByKey(value, "name", _name, allocator);
-
     orjson::SetJsonValueByKey(value, "anchors", fUnitScale*_vanchor, allocator);
     orjson::SetJsonValueByKey(value, "parentLinkName", _linkname0, allocator);
     orjson::SetJsonValueByKey(value, "childLinkName", _linkname1, allocator);
@@ -470,7 +469,7 @@ void KinBody::JointInfo::DeserializeJSON(const rapidjson::Value& value, dReal fU
     orjson::LoadJsonValueByKey(value, "id", _id);
 
     orjson::LoadJsonValueByKey(value, "parentLinkName", _linkname0);
-    orjson::LoadJsonValueByKey(value, "anchors", _vanchor);
+    orjson::LoadJsonValueByKey(value, "anchors", fUnitScale*_vanchor);
     orjson::LoadJsonValueByKey(value, "childLinkName", _linkname1);
     orjson::LoadJsonValueByKey(value, "axes", _vaxes);
     orjson::LoadJsonValueByKey(value, "currentValues", _vcurrentvalues);
@@ -2486,7 +2485,7 @@ void KinBody::Joint::ExtractInfo(KinBody::JointInfo& info) const
     GetValues(info._vcurrentvalues);
     {
         boost::shared_lock< boost::shared_mutex > lock(GetReadableInterfaceMutex());
-            FOREACHC(it, GetReadableInterfaces()) {
+        FOREACHC(it, GetReadableInterfaces()) {
             if (!!it->second) {
                 // make a copy of the readable interface
                 // caller may modify and call UpdateFromInfo with modified readable interfaces
