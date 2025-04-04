@@ -2988,7 +2988,7 @@ public:
         }
 
         // It is possible for us to end up with holes in _vecbodies if bodies are removed; filter these out for processing so we only have valid bodies
-        vBodies.erase(std::remove_if(vBodies.begin(), vBodies.end(), [](const KinBodyPtr& p) { return !p; }));
+        vBodies.erase(std::remove_if(vBodies.begin(), vBodies.end(), [](const KinBodyPtr& p) { return !p; }), vBodies.end());
 
         // Build a lookup table for the bodies available to be matched against from vBodies
         // When trying to identify candidate matches, we can do two hash lookups instead of a sequential scan.
