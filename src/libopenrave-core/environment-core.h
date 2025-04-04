@@ -3003,7 +3003,8 @@ public:
 
         // Keep a list of the bodies that we have matched to infos - in the event that the caller did _not_ specify OnlySpecifiedBodiesExact,
         // when we are finished we will want to remove all bodies in the environment that are _not_ in this list.
-        std::unordered_set<KinBodyPtr> setBodiesWithMatchingInfos;
+        // Store raw pointers here instead of shared pointers because we don't need to track ownership, just membership.
+        std::unordered_set<KinBody*> setBodiesWithMatchingInfos;
 
         // internally manipulates _vecbodies using _AddKinBody/_AddRobot/_RemoveKinBodyFromIterator
         for(int inputBodyIndex = 0; inputBodyIndex < (int)info._vBodyInfos.size(); ++inputBodyIndex) {
@@ -3081,7 +3082,7 @@ public:
 
                 // We know that this body has a matching info in the list we were given, so note that it was directly selected by this update.
                 // This doesn't matter for OnlySpecifiedBodiesExact, but if that option is not passed, we need to know to keep it.
-                setBodiesWithMatchingInfos.emplace(pExistingBody);
+                setBodiesWithMatchingInfos.emplace(pExistingBody.get());
 
                 // Interface should match at this point, since if we had a mismatch in the previous step we should have removed the body already
                 OPENRAVE_ASSERT_OP(pKinBodyInfo->_isRobot, ==, pExistingBody->IsRobot());
@@ -3230,7 +3231,7 @@ public:
                 vCreatedBodies.push_back(pNewBody);
 
                 // Internally cache that this body has a matching body info in the event that we were not called with OnlySpecifiedBodiesExact
-                setBodiesWithMatchingInfos.emplace(pNewBody);
+                setBodiesWithMatchingInfos.emplace(pNewBody.get());
             }
 
             if (!!pInitBody) {
@@ -3281,7 +3282,7 @@ public:
                 }
 
                 // If this body had a matching info record, keep it
-                if (setBodiesWithMatchingInfos.find(environmentBody) != setBodiesWithMatchingInfos.end()) {
+                if (setBodiesWithMatchingInfos.find(environmentBody.get()) != setBodiesWithMatchingInfos.end()) {
                     continue;
                 }
 
