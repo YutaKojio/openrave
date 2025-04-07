@@ -118,37 +118,17 @@ void EnvironmentBase::EnvironmentBaseInfo::DeserializeJSONWithMapping(const rapi
     // for DeserializeJSON, there are two possibilities: 1. full json passed in 2. diff json passed in
     // for example, do not clear _vBodyInfos.clear(), since we could be dealing with partial json
 
-    if (rEnvInfo.HasMember("revision")) {
-        orjson::LoadJsonValueByKey(rEnvInfo, "revision", _revision);
-    }
-
-    if (rEnvInfo.HasMember("unit")) {
-        std::pair<std::string, dReal> unit;
-        orjson::LoadJsonValueByKey(rEnvInfo, "unit", unit);
+    orjson::LoadJsonValueByKey(rEnvInfo, "revision", _revision);
+    std::pair<std::string, dReal> unit;
+    if (orjson::LoadJsonValueByKey(rEnvInfo, "unit", unit)) {
         _unitInfo.lengthUnit = GetLengthUnitFromString(unit.first, LU_Meter);
     }
-
-    if (rEnvInfo.HasMember("unitInfo")) {
-        orjson::LoadJsonValueByKey(rEnvInfo, "unitInfo", _unitInfo);
-    }
-
-    if (rEnvInfo.HasMember("keywords")) {
-        orjson::LoadJsonValueByKey(rEnvInfo, "keywords", _keywords);
-    }
-
-    if (rEnvInfo.HasMember("description")) {
-        orjson::LoadJsonValueByKey(rEnvInfo, "description", _description);
-    }
-    if( rEnvInfo.HasMember("referenceUri") ) {
-        orjson::LoadJsonValueByKey(rEnvInfo, "referenceUri", _referenceUri);
-    }
-    if( rEnvInfo.HasMember("uri") ) {
-        orjson::LoadJsonValueByKey(rEnvInfo, "uri", _uri);
-    }
-
-    if (rEnvInfo.HasMember("gravity")) {
-        orjson::LoadJsonValueByKey(rEnvInfo, "gravity", _gravity);
-    }
+    orjson::LoadJsonValueByKey(rEnvInfo, "unitInfo", _unitInfo);
+    orjson::LoadJsonValueByKey(rEnvInfo, "keywords", _keywords);
+    orjson::LoadJsonValueByKey(rEnvInfo, "description", _description);
+    orjson::LoadJsonValueByKey(rEnvInfo, "referenceUri", _referenceUri);
+    orjson::LoadJsonValueByKey(rEnvInfo, "uri", _uri);
+    orjson::LoadJsonValueByKey(rEnvInfo, "gravity", _gravity);
 
     {
         rapidjson::Value::ConstMemberIterator itModifiedAt = rEnvInfo.FindMember("modifiedAt");
@@ -159,9 +139,8 @@ void EnvironmentBase::EnvironmentBaseInfo::DeserializeJSONWithMapping(const rapi
             }
         }
     }
-    if (rEnvInfo.HasMember("revisionId")) {
-        orjson::LoadJsonValueByKey(rEnvInfo, "revisionId", _revisionId);
-    }
+
+    orjson::LoadJsonValueByKey(rEnvInfo, "revisionId", _revisionId);
 
     if (rEnvInfo.HasMember("uint64Parameters") && rEnvInfo["uint64Parameters"].IsArray()) {
         for (rapidjson::Value::ConstValueIterator it = rEnvInfo["uint64Parameters"].Begin(); it != rEnvInfo["uint64Parameters"].End(); ++it) {
