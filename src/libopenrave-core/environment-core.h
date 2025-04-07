@@ -2987,9 +2987,6 @@ public:
             vBodies = _vecbodies;
         }
 
-        // It is possible for us to end up with holes in _vecbodies if bodies are removed; filter these out for processing so we only have valid bodies
-        vBodies.erase(std::remove_if(vBodies.begin(), vBodies.end(), [](const KinBodyPtr& p) { return !p; }), vBodies.end());
-
         // If the environment is large but we are only updating a small number of bodies, building a full lookup table is expensive relative to the amount of lookups we actually do.
         // We can reduce this somewhat by pre-filtering the set of names/ids that could ever be looked up, and only including those in our lookup table.
         // This incurs (info._vBodyInfos.size() + vBodies.size()) more hash _lookups_, but means that we save up to (vBodies.size() - info._vBodyInfos.size()) _allocations_.
@@ -3008,6 +3005,11 @@ public:
         std::unordered_map<string_view, size_t> existingBodyIndicesById; // Map of body id -> index into vBodies
         std::unordered_map<string_view, size_t> existingBodyIndicesByName; // Map of body name -> index into vBodies
         for (size_t i = 0; i < vBodies.size(); i++) {
+            // It's possible for holes to exist in vBodies since when bodies are removed from the environment their entries in _vecbodies are just nulled out.
+            if (!vBodies[i]) {
+                continue;
+            }
+
             const KinBody& body = *vBodies[i];
             if (bodyIdsToUpdate.find(body.GetId()) == bodyIdsToUpdate.end() && bodyNamesToUpdate.find(body.GetName()) == bodyNamesToUpdate.end()) {
                 continue;
