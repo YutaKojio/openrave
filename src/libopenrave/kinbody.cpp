@@ -529,8 +529,8 @@ bool KinBody::InitFromBoxes(const std::vector<AABB>& vaabbs, bool visible, const
         info._t.trans = itab->pos;
         info._bVisible = visible;
         info._vGeomData = itab->extents;
-        info._vDiffuseColor=Vector(1,0.5f,0.5f,1);
-        info._vAmbientColor=Vector(0.1,0.0f,0.0f,0);
+        info._vDiffuseColor = Vector(1, 0.5f, 0.5f);
+        info._vAmbientColor = Vector(0.1, 0.0f, 0.0f);
         Link::GeometryPtr geom(new Link::Geometry(plink,info));
         geom->_info.InitCollisionMesh();
         numvertices += geom->GetCollisionMesh().vertices.size();
@@ -574,8 +574,8 @@ bool KinBody::InitFromBoxes(const std::vector<OBB>& vobbs, bool visible, const s
         info._t = tm;
         info._bVisible = visible;
         info._vGeomData = itobb->extents;
-        info._vDiffuseColor=Vector(1,0.5f,0.5f,1);
-        info._vAmbientColor=Vector(0.1,0.0f,0.0f,0);
+        info._vDiffuseColor = Vector(1, 0.5f, 0.5f);
+        info._vAmbientColor = Vector(0.1, 0.0f, 0.0f);
         Link::GeometryPtr geom(new Link::Geometry(plink,info));
         geom->_info.InitCollisionMesh();
         numvertices += geom->GetCollisionMesh().vertices.size();
@@ -614,8 +614,8 @@ bool KinBody::InitFromSpheres(const std::vector<Vector>& vspheres, bool visible,
         info._t.trans.x = itv->x; info._t.trans.y = itv->y; info._t.trans.z = itv->z;
         info._bVisible = visible;
         info._vGeomData.x = itv->w;
-        info._vDiffuseColor=Vector(1,0.5f,0.5f,1);
-        info._vAmbientColor=Vector(0.1,0.0f,0.0f,0);
+        info._vDiffuseColor = Vector(1, 0.5f, 0.5f);
+        info._vAmbientColor = Vector(0.1, 0.0f, 0.0f);
         Link::GeometryPtr geom(new Link::Geometry(plink,info));
         geom->_info.InitCollisionMesh();
         plink->_vGeometries.push_back(geom);
@@ -643,8 +643,8 @@ bool KinBody::InitFromTrimesh(const TriMesh& trimesh, bool visible, const std::s
     GeometryInfo info;
     info._type = GT_TriMesh;
     info._bVisible = visible;
-    info._vDiffuseColor=Vector(1,0.5f,0.5f,1);
-    info._vAmbientColor=Vector(0.1,0.0f,0.0f,0);
+    info._vDiffuseColor = Vector(1, 0.5f, 0.5f);
+    info._vAmbientColor = Vector(0.1, 0.0f, 0.0f);
     info._meshcollision = trimesh;
     Link::GeometryPtr geom(new Link::Geometry(plink,info));
     plink->_vGeometries.push_back(geom);
