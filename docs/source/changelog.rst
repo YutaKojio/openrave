@@ -3,6 +3,11 @@
 ChangeLog
 #########
 
+Version 0.163.3
+===============
+
+- Apply `fUnitScale` to applicable values when serializing KinBody to JSON.
+
 Version 0.163.2
 ===============
 
