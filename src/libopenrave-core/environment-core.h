@@ -2990,13 +2990,28 @@ public:
         // It is possible for us to end up with holes in _vecbodies if bodies are removed; filter these out for processing so we only have valid bodies
         vBodies.erase(std::remove_if(vBodies.begin(), vBodies.end(), [](const KinBodyPtr& p) { return !p; }), vBodies.end());
 
+        // If the environment is large but we are only updating a small number of bodies, building a full lookup table is expensive relative to the amount of lookups we actually do.
+        // We can reduce this somewhat by pre-filtering the set of names/ids that could ever be looked up, and only including those in our lookup table.
+        // This incurs (info._vBodyInfos.size() + vBodies.size()) more hash _lookups_, but means that we save up to (vBodies.size() - info._vBodyInfos.size()) _allocations_.
+        // Since we expect vBodies.size() >> info._vBodyInfos.size() in most cases, and allocations are more costly than lookups, this is overall a speedup despite the extra steps.
+        std::unordered_set<string_view> bodyIdsToUpdate; // string_views are over info._vBodyInfos, guaranteed lifetime for the rest of this function
+        std::unordered_set<string_view> bodyNamesToUpdate;
+        for (const KinBody::KinBodyInfoPtr& pKinBodyInfo : info._vBodyInfos) {
+            bodyIdsToUpdate.emplace(pKinBodyInfo->_id);
+            bodyNamesToUpdate.emplace(pKinBodyInfo->_name);
+        }
+
         // Build a lookup table for the bodies available to be matched against from vBodies
         // When trying to identify candidate matches, we can do two hash lookups instead of a sequential scan.
         // If we match a body out of vBodies, then we just need to remove the id/name maps that linked to it and reset the body at that location.
-        std::unordered_map<std::string, size_t> existingBodyIndicesById; // Map of body id -> index into vBodies
-        std::unordered_map<std::string, size_t> existingBodyIndicesByName; // Map of body name -> index into vBodies
+        // These maps use string_views over the bodies in vBodies; these bodies _are_ removed during iteration; care must be taken to erase the matching entries.
+        std::unordered_map<string_view, size_t> existingBodyIndicesById; // Map of body id -> index into vBodies
+        std::unordered_map<string_view, size_t> existingBodyIndicesByName; // Map of body name -> index into vBodies
         for (size_t i = 0; i < vBodies.size(); i++) {
             const KinBody& body = *vBodies[i];
+            if (bodyIdsToUpdate.find(body.GetId()) == bodyIdsToUpdate.end() && bodyNamesToUpdate.find(body.GetName()) == bodyNamesToUpdate.end()) {
+                continue;
+            }
             existingBodyIndicesById[body.GetId()] = i;
             existingBodyIndicesByName[body.GetName()] = i;
         }
@@ -3017,8 +3032,8 @@ public:
             KinBodyPtr pExistingBody; // Will be loaded with the existing body to update, if any
             do {
                 // Check if we have bodies with matching names / ids
-                const std::unordered_map<std::string, size_t>::iterator existingBodyByIdIt = existingBodyIndicesById.find(kinBodyInfo._id);
-                const std::unordered_map<std::string, size_t>::iterator existingBodyByNameIt = existingBodyIndicesByName.find(kinBodyInfo._name);
+                const std::unordered_map<string_view, size_t>::iterator existingBodyByIdIt = existingBodyIndicesById.find(kinBodyInfo._id);
+                const std::unordered_map<string_view, size_t>::iterator existingBodyByNameIt = existingBodyIndicesByName.find(kinBodyInfo._name);
 
                 // Get the corresponding indexes into vBodies, or -1 if there was no match
                 ssize_t existingBodyIndexSameId = existingBodyByIdIt != existingBodyIndicesByName.end() ? existingBodyByIdIt->second : -1;
@@ -3035,7 +3050,7 @@ public:
                 // If we matched a body to reuse, latch it out and clear the mappings so that we can't double-process it
                 pExistingBody = std::move(vBodies[existingBodyIndex]); // Invalidate this slot in vBodies to make sure we don't accidentally re-use it
                 OPENRAVE_ASSERT_OP(pExistingBody, !=, KinBodyPtr()); // Only valid entries should exist in our lookup maps
-                existingBodyIndicesById.erase(pExistingBody->GetId());
+                existingBodyIndicesById.erase(pExistingBody->GetId()); // Also ensures no dangling string_views in the event this body gets destroyed later in the loop
                 existingBodyIndicesByName.erase(pExistingBody->GetName());
 
                 // If we matched an existing body, but that body is of a different interface to the info (e.g robot vs plain body), then we can't just update, need to recreate it.
