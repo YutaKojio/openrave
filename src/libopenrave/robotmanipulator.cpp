@@ -65,8 +65,7 @@ void RobotBase::ManipulatorInfo::DeserializeJSON(const rapidjson::Value& value, 
 {
     orjson::LoadJsonValueByKey(value, "id", _id);
     orjson::LoadJsonValueByKey(value, "name", _name);
-    if (value.HasMember("transform")) {
-        orjson::LoadJsonValueByKey(value, "transform", _tLocalTool);
+    if (orjson::LoadJsonValueByKey(value, "transform", _tLocalTool)) {
         _tLocalTool.trans *= fUnitScale;
     }
 
