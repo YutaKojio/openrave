@@ -798,7 +798,7 @@ void KinBody::GrabbedInfo::SerializeJSON(rapidjson::Value& value, rapidjson::Doc
     }
     orjson::SetJsonValueByKey(value, "grabbedName", _grabbedname, allocator);
     orjson::SetJsonValueByKey(value, "robotLinkName", _robotlinkname, allocator);
-    orjson::SetJsonValueByKey(value, "gripperName", _grippername, allocator);
+    orjson::SetJsonValueByKey(value, "grippername", _grippername, allocator);
     Transform transform = _trelative;
     transform.trans *= fUnitScale;
     orjson::SetJsonValueByKey(value, "transform", transform, allocator);
@@ -815,7 +815,7 @@ void KinBody::GrabbedInfo::DeserializeJSON(const rapidjson::Value& value, dReal 
     orjson::LoadJsonValueByKey(value, "id", _id);
     orjson::LoadJsonValueByKey(value, "grabbedName", _grabbedname);
     orjson::LoadJsonValueByKey(value, "robotLinkName", _robotlinkname);
-    orjson::LoadJsonValueByKey(value, "gripperName", _grippername);
+    orjson::LoadJsonValueByKey(value, "grippername", _grippername);
     if (value.HasMember("transform")) {
         orjson::LoadJsonValueByKey(value, "transform", _trelative);
         _trelative.trans *= fUnitScale;
