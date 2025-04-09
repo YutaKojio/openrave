@@ -265,7 +265,7 @@ void EnvironmentBase::EnvironmentBaseInfo::DeserializeJSONWithMapping(const rapi
             bool isDeleted = orjson::GetJsonValueByKey<bool>(rKinBodyInfo, "__deleted__", false);
 
             // Do we have an explicit mapping for this body?
-            size_t existingBodyIndex = -1;
+            ssize_t existingBodyIndex = -1;
             if (iInputBodyIndex < (int)vInputToBodyInfoMapping.size() && vInputToBodyInfoMapping[iInputBodyIndex] >= 0) {
                 existingBodyIndex = vInputToBodyInfoMapping[iInputBodyIndex];
             }
