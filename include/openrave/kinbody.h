@@ -3211,7 +3211,7 @@ public:
     virtual void SetSelfCollisionChecker(CollisionCheckerBasePtr collisionchecker);
 
     /// \brief Returns the self-collision checker set specifically for this robot. If none has been set, return empty.
-    virtual CollisionCheckerBasePtr GetSelfCollisionChecker() const;
+    virtual const CollisionCheckerBasePtr& GetSelfCollisionChecker() const;
 
     /// Collision checking utilities that use internal structures of the kinbody like grabbed info or the self-collision checker.
     /// @name Collision Checking Utilities
