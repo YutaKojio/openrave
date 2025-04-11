@@ -3817,6 +3817,11 @@ protected:
     /// It is assumed that bodies cannot have their environment index change while they are grabbed.
     MapGrabbedByEnvironmentIndex _grabbedBodiesByEnvironmentIndex;
 
+    /// Flag to track whether this body has ever been grabbed.
+    /// If it has, then when it is removed from the environment, we need to make sure to also remove it from any non-environment collision checkers
+    /// For bodies that were never grabbed, we can skip iterating all of the other bodies in the env.
+    bool _wasEverGrabbed = false;
+
     mutable std::vector<std::list<UserDataWeakPtr> > _vlistRegisteredCallbacks; ///< callbacks to call when particular properties of the body change. _vlistRegisteredCallbacks[index] is the list of change callbacks where 1<<index is part of KinBodyProperty, this makes it easy to find out if any particular bits have callbacks. The registration/de-registration of the lists can happen at any point and does not modify the kinbody state exposed to the user, hence it is mutable.
 
     mutable boost::array<std::vector<int>, 4> _vNonAdjacentLinks; ///< contains cached versions of the non-adjacent links depending on values in AdjacentOptions. Declared as mutable since data is cached.
