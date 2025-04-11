@@ -25,6 +25,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include <openrave/hashcontext.h>
+
 namespace OpenRAVE {
 
 class OpenRAVEFunctionParserReal;
@@ -853,6 +855,7 @@ public:
         }
 
         void serialize(std::ostream& o, int options) const;
+        void digest(HashContext& hash, int options) const;
 
         /// \brief sets a new collision mesh and notifies every registered callback about it
         void SetCollisionMesh(const TriMesh& mesh);
@@ -1384,6 +1387,7 @@ public:
         void GetRigidlyAttachedLinks(std::vector<boost::shared_ptr<Link> >& vattachedlinks) const;
 
         void serialize(std::ostream& o, int options) const;
+        void digest(HashContext& hash, int options) const;
 
         /// \brief return a map of custom float parameters
         inline const std::map<std::string, std::vector<dReal> >& GetFloatParameters() const {
@@ -2021,6 +2025,7 @@ public:
         void SetWrapOffset(dReal offset, int iaxis=0);
 
         void serialize(std::ostream& o, int options) const;
+        void digest(HashContext& hash, int options) const;
 
         /// @name Internal Hierarchy Methods
         //@{
@@ -3606,6 +3611,7 @@ public:
 
     /// only used for hashes...
     virtual void serialize(std::ostream& o, int options) const;
+    virtual void digest(HashContext& hash, int options) const;
 
     inline KinBodyPtr shared_kinbody() {
         return boost::static_pointer_cast<KinBody>(shared_from_this());

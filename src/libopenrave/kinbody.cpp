@@ -6134,6 +6134,22 @@ void KinBody::serialize(std::ostream& o, int options) const
     }
 }
 
+void KinBody::digest(HashContext& hash, int options) const
+{
+    hash << _veclinks.size();
+    FOREACHC(it,_veclinks) {
+        (*it)->digest(hash,options);
+    }
+    hash << _vecjoints.size();
+    FOREACHC(it,_vecjoints) {
+        (*it)->digest(hash,options);
+    }
+    hash << _vPassiveJoints.size();
+    FOREACHC(it,_vPassiveJoints) {
+        (*it)->digest(hash,options);
+    }
+}
+
 void KinBody::SetZeroConfiguration()
 {
     std::vector<Vector> vaxes;
@@ -6150,11 +6166,10 @@ const std::string& KinBody::GetKinematicsGeometryHash() const
 {
     CHECK_INTERNAL_COMPUTATION;
     if( __hashKinematicsGeometryDynamics.size() == 0 ) {
-        ostringstream ss;
-        ss << std::fixed << std::setprecision(SERIALIZATION_PRECISION);
+        HashContext hash;
         // should add dynamics since that affects a lot how part is treated.
-        serialize(ss,SO_Kinematics|SO_Geometry|SO_Dynamics);
-        __hashKinematicsGeometryDynamics = utils::GetMD5HashString(ss.str());
+        digest(hash, SO_Kinematics|SO_Geometry|SO_Dynamics);
+        __hashKinematicsGeometryDynamics = hash.HexDigest();
     }
     return __hashKinematicsGeometryDynamics;
 }

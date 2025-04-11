@@ -688,6 +688,21 @@ void KinBody::Link::serialize(std::ostream& o, int options) const
     }
 }
 
+void KinBody::Link::digest(HashContext& hash, int options) const
+{
+    hash << _index;
+    if( options & SO_Geometry ) {
+        hash << _vGeometries.size();
+        FOREACHC(it,_vGeometries) {
+            (*it)->digest(hash, options);
+        }
+    }
+    if( options & SO_Dynamics ) {
+        hash << _info._tMassFrame << _info._mass;
+        hash << _info._vinertiamoments;
+    }
+}
+
 void KinBody::Link::SetStatic(bool bStatic)
 {
     if( _info._bStatic != bStatic ) {

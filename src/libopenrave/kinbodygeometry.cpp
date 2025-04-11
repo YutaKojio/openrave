@@ -1933,6 +1933,37 @@ void KinBody::Geometry::serialize(std::ostream& o, int options) const
     }
 }
 
+void KinBody::Geometry::digest(HashContext& hash, int options) const
+{
+    hash << _info._t;
+    hash << static_cast<int>(_info._type);
+    hash << _info._vRenderScale;
+    if (_info._type == GT_TriMesh) {
+        hash << _info._meshcollision.vertices.size();
+        hash << _info._meshcollision.vertices;
+        hash << _info._meshcollision.indices.size();
+        hash << _info._meshcollision.indices;
+    }
+
+    else {
+        hash << _info._vGeomData;
+        if (_info._type == GT_Cage) {
+            hash << _info._vGeomData2;
+            for (size_t iwall = 0; iwall < _info._vSideWalls.size(); ++iwall) {
+                const GeometryInfo::SideWall& s = _info._vSideWalls[iwall];
+                hash << s.transf;
+                hash << s.vExtents;
+                hash << static_cast<uint32_t>(s.type);
+            }
+        }
+        else if (_info._type == GT_Container) {
+            hash << _info._vGeomData2;
+            hash << _info._vGeomData3;
+            hash << _info._vGeomData4;
+        }
+    }
+}
+
 void KinBody::Geometry::SetCollisionMesh(const TriMesh& mesh)
 {
     OPENRAVE_ASSERT_FORMAT0(_info._bModifiable, "geometry cannot be modified", ORE_Failed);
