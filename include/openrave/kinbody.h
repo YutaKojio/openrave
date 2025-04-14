@@ -1303,8 +1303,8 @@ public:
         /// This gives a user control for dynamically changing the object geometry. Note that the kinbody/robot hash could change.
         /// \param geometries a list of geometry infos to be initialized into new geometry objects, note that the geometry info data is copied
         /// \param bForceRecomputeMeshCollision if true, then recompute mesh collision for all non-tri meshes
-        void InitGeometries(std::vector<KinBody::GeometryInfoConstPtr>& geometries, bool bForceRecomputeMeshCollision=true);
-        void InitGeometries(std::list<KinBody::GeometryInfo>& geometries, bool bForceRecomputeMeshCollision=true);
+        void InitGeometries(const std::vector<KinBody::GeometryInfoConstPtr>& geometries, bool bForceRecomputeMeshCollision=true);
+        void InitGeometries(const std::list<KinBody::GeometryInfo>& geometries, bool bForceRecomputeMeshCollision=true);
 
 private:
         /// \brief _vGeometries is expected to be filled with the new Geometries already. This will initialize them.
