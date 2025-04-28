@@ -3002,20 +3002,20 @@ public:
         // When trying to identify candidate matches, we can do two hash lookups instead of a sequential scan.
         // If we match a body out of vBodies, then we just need to remove the id/name maps that linked to it and reset the body at that location.
         // These maps use string_views over the bodies in vBodies; these bodies _are_ removed during iteration; care must be taken to erase the matching entries.
-        std::unordered_map<string_view, size_t> existingBodyIndicesById; // Map of body id -> index into vBodies
-        std::unordered_map<string_view, size_t> existingBodyIndicesByName; // Map of body name -> index into vBodies
-        for (size_t i = 0; i < vBodies.size(); i++) {
+        std::unordered_map<string_view, int> existingBodyIndicesById; // Map of body id -> environmentBodyIndex into vBodies
+        std::unordered_map<string_view, int> existingBodyIndicesByName; // Map of body name -> environmentBodyIndex into vBodies
+        for (size_t bodyIndex = 0; bodyIndex < vBodies.size(); bodyIndex++) {
             // It's possible for holes to exist in vBodies since when bodies are removed from the environment their entries in _vecbodies are just nulled out.
-            if (!vBodies[i]) {
+            if (!vBodies[bodyIndex]) {
                 continue;
             }
 
-            const KinBody& body = *vBodies[i];
+            const KinBody& body = *vBodies[bodyIndex];
             if (bodyIdsToUpdate.find(body.GetId()) == bodyIdsToUpdate.end() && bodyNamesToUpdate.find(body.GetName()) == bodyNamesToUpdate.end()) {
                 continue;
             }
-            existingBodyIndicesById[body.GetId()] = i;
-            existingBodyIndicesByName[body.GetName()] = i;
+            existingBodyIndicesById[body.GetId()] = bodyIndex;
+            existingBodyIndicesByName[body.GetName()] = bodyIndex;
         }
 
         // Keep a list of the bodies that we have matched to infos - in the event that the caller did _not_ specify OnlySpecifiedBodiesExact,
@@ -3024,8 +3024,7 @@ public:
         std::unordered_set<KinBody*> setBodiesWithMatchingInfos;
 
         // internally manipulates _vecbodies using _AddKinBody/_AddRobot/_RemoveKinBodyFromIterator
-        for(int inputBodyIndex = 0; inputBodyIndex < (int)info._vBodyInfos.size(); ++inputBodyIndex) {
-            const KinBody::KinBodyInfoConstPtr& pKinBodyInfo = info._vBodyInfos[inputBodyIndex];
+        for(const KinBody::KinBodyInfoPtr& pKinBodyInfo : info._vBodyInfos ) {
             const KinBody::KinBodyInfo& kinBodyInfo = *pKinBodyInfo;
             RAVELOG_VERBOSE_FORMAT("env=%s, id '%s', name '%s', _vGrabbedInfos=%d", GetNameId()%pKinBodyInfo->_id%pKinBodyInfo->_name%pKinBodyInfo->_vGrabbedInfos.size());
             RobotBase::RobotBaseInfoConstPtr pRobotBaseInfo = OPENRAVE_DYNAMIC_POINTER_CAST<const RobotBase::RobotBaseInfo>(pKinBodyInfo);
@@ -3034,15 +3033,15 @@ public:
             KinBodyPtr pExistingBody; // Will be loaded with the existing body to update, if any
             do {
                 // Check if we have bodies with matching names / ids
-                const std::unordered_map<string_view, size_t>::iterator existingBodyByIdIt = existingBodyIndicesById.find(kinBodyInfo._id);
-                const std::unordered_map<string_view, size_t>::iterator existingBodyByNameIt = existingBodyIndicesByName.find(kinBodyInfo._name);
+                const std::unordered_map<string_view, int>::iterator itExistingBodyIndexById = existingBodyIndicesById.find(kinBodyInfo._id);
+                const std::unordered_map<string_view, int>::iterator itExistingBodyIndexByName = existingBodyIndicesByName.find(kinBodyInfo._name);
 
                 // Get the corresponding indexes into vBodies, or -1 if there was no match
-                ssize_t existingBodyIndexSameId = existingBodyByIdIt != existingBodyIndicesByName.end() ? existingBodyByIdIt->second : -1;
-                ssize_t existingBodyIndexSameName = existingBodyByNameIt != existingBodyIndicesByName.end() ? existingBodyByNameIt->second : -1;
+                int existingBodyIndexSameId = itExistingBodyIndexById != existingBodyIndicesByName.end() ? itExistingBodyIndexById->second : -1;
+                int existingBodyIndexSameName = itExistingBodyIndexByName != existingBodyIndicesByName.end() ? itExistingBodyIndexByName->second : -1;
 
                 // Pick the best existing body index based on our resolution order
-                ssize_t existingBodyIndex = existingBodyIndexSameId >= 0 ? existingBodyIndexSameId : existingBodyIndexSameName;
+                int existingBodyIndex = existingBodyIndexSameId >= 0 ? existingBodyIndexSameId : existingBodyIndexSameName;
 
                 // If we didn't match anything, we have to just create a new body based on this info
                 if (existingBodyIndex < 0) {
