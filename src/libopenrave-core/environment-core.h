@@ -3027,7 +3027,7 @@ public:
         for(int inputBodyIndex = 0; inputBodyIndex < (int)info._vBodyInfos.size(); ++inputBodyIndex) {
             const KinBody::KinBodyInfoConstPtr& pKinBodyInfo = info._vBodyInfos[inputBodyIndex];
             const KinBody::KinBodyInfo& kinBodyInfo = *pKinBodyInfo;
-            RAVELOG_VERBOSE_FORMAT("env=%s, id '%s', name '%s'", GetNameId()%pKinBodyInfo->_id%pKinBodyInfo->_name);
+            RAVELOG_VERBOSE_FORMAT("env=%s, id '%s', name '%s', _vGrabbedInfos=%d", GetNameId()%pKinBodyInfo->_id%pKinBodyInfo->_name%pKinBodyInfo->_vGrabbedInfos.size());
             RobotBase::RobotBaseInfoConstPtr pRobotBaseInfo = OPENRAVE_DYNAMIC_POINTER_CAST<const RobotBase::RobotBaseInfo>(pKinBodyInfo);
 
             // Try and match this body info to an existing body
@@ -3091,7 +3091,7 @@ public:
 
             // Were we able to match an existing body?
             if (!!pExistingBody) {
-                RAVELOG_VERBOSE_FORMAT("env=%s, update existing body id '%s'", GetNameId() % pExistingBody->_id);
+                RAVELOG_VERBOSE_FORMAT("env=%s, update existing body id '%s', numGrabbed=%d", GetNameId()%pExistingBody->_id%pExistingBody->GetNumGrabbed());
 
                 // If we have an existing body to update, make sure that it gets removed from the list of temporarily renamed bodies,
                 // since we're about to give it a proper name / don't want it to get garbage collected later.
@@ -3105,6 +3105,7 @@ public:
                 OPENRAVE_ASSERT_OP(pKinBodyInfo->_isRobot, ==, pExistingBody->IsRobot());
 
                 // Perform the actual update, making sure to call the correct virtual method if this is a robot
+
                 UpdateFromInfoResult updateFromInfoResult = UFIR_NoChange;
                 if (pKinBodyInfo->_isRobot && pExistingBody->IsRobot()) {
                     RobotBasePtr pRobot = RaveInterfaceCast<RobotBase>(pExistingBody);
@@ -3117,7 +3118,7 @@ public:
                 } else {
                     updateFromInfoResult = pExistingBody->UpdateFromKinBodyInfo(*pKinBodyInfo);
                 }
-                RAVELOG_VERBOSE_FORMAT("env=%s, update body '%s' from info result %d", GetNameId() % pExistingBody->_id % static_cast<int>(updateFromInfoResult));
+                RAVELOG_VERBOSE_FORMAT("env=%s, update body '%s' from info result %d", GetNameId() % pExistingBody->_id % static_cast<int>(updateFromInfoResult)%pExistingBody->GetNumGrabbed());
 
                 // If the body didn't change at all, nothing else needs be done. Don't count it as being modified by this update.
                 if (updateFromInfoResult == UFIR_NoChange) {
