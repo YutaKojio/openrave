@@ -2177,30 +2177,30 @@ object PyRobotBase::CalculateActiveAngularVelocityJacobian(int index) const
     return toPyArray(vjacobian,dims);
 }
 
-bool PyRobotBase::Grab(PyKinBodyPtr pbody) {
-    CHECK_POINTER(pbody); return _probot->Grab(pbody->GetBody(), rapidjson::Value());
+bool PyRobotBase::Grab(PyKinBodyPtr pbody, const std::string& grippername) {
+    CHECK_POINTER(pbody); return _probot->Grab(pbody->GetBody(), rapidjson::Value(), grippername);
 }
 
 // since PyKinBody::Grab is overloaded with (pbody, plink) parameters, have to support both...?
-bool PyRobotBase::Grab(PyKinBodyPtr pbody, object pylink_or_linkstoignore)
+bool PyRobotBase::Grab(PyKinBodyPtr pbody, object pylink_or_linkstoignore, const std::string& grippername)
 {
     CHECK_POINTER(pbody);
     CHECK_POINTER(pylink_or_linkstoignore);
     KinBody::LinkPtr plink = GetKinBodyLink(pylink_or_linkstoignore);
     if( !!plink ) {
-        return _probot->Grab(pbody->GetBody(), plink, rapidjson::Value());
+        return _probot->Grab(pbody->GetBody(), plink, rapidjson::Value(), grippername);
     }
     if( !IS_PYTHONOBJECT_NONE(pylink_or_linkstoignore) && len(pylink_or_linkstoignore) > 0 && IS_PYTHONOBJECT_STRING(object(pylink_or_linkstoignore[0])) ) {
         // pylink_or_linkstoignore is a list of link names to be ignored
         std::set<std::string> setlinkstoignoreString = ExtractSet<std::string>(pylink_or_linkstoignore);
-        return _probot->Grab(pbody->GetBody(), setlinkstoignoreString, rapidjson::Value());
+        return _probot->Grab(pbody->GetBody(), setlinkstoignoreString, rapidjson::Value(), grippername);
     }
     // pylink_or_linkstoignore is a list of link indices to be ignored
     std::set<int> setlinkstoignore = ExtractSet<int>(pylink_or_linkstoignore);
-    return _probot->Grab(pbody->GetBody(), setlinkstoignore, rapidjson::Value());
+    return _probot->Grab(pbody->GetBody(), setlinkstoignore, rapidjson::Value(), grippername);
 }
 
-bool PyRobotBase::Grab(PyKinBodyPtr pbody, object pylink, object linkstoignore, object grabbedUserData)
+bool PyRobotBase::Grab(PyKinBodyPtr pbody, object pylink, object linkstoignore, object grabbedUserData, const std::string& grippername)
 {
     CHECK_POINTER(pbody);
     CHECK_POINTER(pylink);
@@ -2212,11 +2212,11 @@ bool PyRobotBase::Grab(PyKinBodyPtr pbody, object pylink, object linkstoignore, 
     if( !IS_PYTHONOBJECT_NONE(linkstoignore) && len(linkstoignore) > 0 && IS_PYTHONOBJECT_STRING(object(linkstoignore[0])) ) {
         // linkstoignore is a list of link names
         std::set<std::string> setlinkstoignoreString = ExtractSet<std::string>(linkstoignore);
-        return _pbody->Grab(pbody->GetBody(), GetKinBodyLink(pylink), setlinkstoignoreString, rGrabbedUserData);
+        return _pbody->Grab(pbody->GetBody(), GetKinBodyLink(pylink), setlinkstoignoreString, rGrabbedUserData, grippername);
     }
     // linkstoignore is a list of link indices
     std::set<int> setlinkstoignoreInt = ExtractSet<int>(linkstoignore);
-    return _pbody->Grab(pbody->GetBody(), GetKinBodyLink(pylink), setlinkstoignoreInt, rGrabbedUserData);
+    return _pbody->Grab(pbody->GetBody(), GetKinBodyLink(pylink), setlinkstoignoreInt, rGrabbedUserData, grippername);
 }
 
 bool PyRobotBase::CheckLinkSelfCollision(int ilinkindex, object olinktrans, PyCollisionReportPtr pyreport)
@@ -2629,9 +2629,9 @@ void init_openravepy_robot()
         void (PyRobotBase::*psetactivedofs2)(const object&, int) = &PyRobotBase::SetActiveDOFs;
         void (PyRobotBase::*psetactivedofs3)(const object&, int, object) = &PyRobotBase::SetActiveDOFs;
 
-        bool (PyRobotBase::*pgrab1)(PyKinBodyPtr) = &PyRobotBase::Grab;
-        bool (PyRobotBase::*pgrab3)(PyKinBodyPtr, object) = &PyRobotBase::Grab;
-        bool (PyRobotBase::*pgrab5)(PyKinBodyPtr, object, object, object) = &PyRobotBase::Grab;
+        bool (PyRobotBase::*pgrab1)(PyKinBodyPtr, const string &) = &PyRobotBase::Grab;
+        bool (PyRobotBase::*pgrab3)(PyKinBodyPtr, object, const string &) = &PyRobotBase::Grab;
+        bool (PyRobotBase::*pgrab5)(PyKinBodyPtr, object, object, object, const string &) = &PyRobotBase::Grab;
 
         PyRobotBase::PyManipulatorPtr (PyRobotBase::*setactivemanipulator2)(const std::string&) = &PyRobotBase::SetActiveManipulator;
         PyRobotBase::PyManipulatorPtr (PyRobotBase::*setactivemanipulator3)(PyRobotBase::PyManipulatorPtr) = &PyRobotBase::SetActiveManipulator;
@@ -2810,9 +2810,9 @@ void init_openravepy_robot()
                        .def("CalculateActiveJacobian",&PyRobotBase::CalculateActiveJacobian, PY_ARGS("linkindex","offset") DOXY_FN(RobotBase,CalculateActiveJacobian "int; const Vector; std::vector"))
                        .def("CalculateActiveRotationJacobian",&PyRobotBase::CalculateActiveRotationJacobian, PY_ARGS("linkindex","quat") DOXY_FN(RobotBase,CalculateActiveRotationJacobian "int; const Vector; std::vector"))
                        .def("CalculateActiveAngularVelocityJacobian",&PyRobotBase::CalculateActiveAngularVelocityJacobian, PY_ARGS("linkindex") DOXY_FN(RobotBase,CalculateActiveAngularVelocityJacobian "int; std::vector"))
-                       .def("Grab",pgrab1, PY_ARGS("body") DOXY_FN(RobotBase,Grab "KinBodyPtr"))
-                       .def("Grab",pgrab3, PY_ARGS("body","grablink") DOXY_FN(RobotBase,Grab "KinBodyPtr; LinkPtr"))
-                       .def("Grab",pgrab5, PY_ARGS("body","grablink","linkstoignore","grabbedUserData") DOXY_FN(RobotBase,Grab "KinBodyPtr; LinkPtr; Linkptr; rapidjson::Document"))
+                       .def("Grab",pgrab1, PY_ARGS("body") py::arg("grippername")="", DOXY_FN(RobotBase,Grab "KinBodyPtr"))
+                       .def("Grab",pgrab3, PY_ARGS("body","grablink") py::arg("grippername")="", DOXY_FN(RobotBase,Grab "KinBodyPtr; LinkPtr"))
+                       .def("Grab",pgrab5, PY_ARGS("body","grablink","linkstoignore","grabbedUserData") py::arg("grippername")="", DOXY_FN(RobotBase,Grab "KinBodyPtr; LinkPtr; Linkptr; rapidjson::Document"))
 #ifdef USE_PYBIND11_PYTHON_BINDINGS
                        .def("CheckLinkSelfCollision", &PyRobotBase::CheckLinkSelfCollision,
                             "linkindex"_a,

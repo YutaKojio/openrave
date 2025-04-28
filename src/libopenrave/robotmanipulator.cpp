@@ -39,7 +39,11 @@ void RobotBase::ManipulatorInfo::SerializeJSON(rapidjson::Value& value, rapidjso
 {
     orjson::SetJsonValueByKey(value, "id", _id, allocator);
     orjson::SetJsonValueByKey(value, "name", _name, allocator);
-    orjson::SetJsonValueByKey(value, "transform", _tLocalTool, allocator);
+    {
+        Transform tLocalTool = _tLocalTool;
+        tLocalTool.trans *= fUnitScale;
+        orjson::SetJsonValueByKey(value, "transform", tLocalTool, allocator);
+    }
     if( _vChuckingDirection.size() > 0 ) {
         orjson::SetJsonValueByKey(value, "chuckingDirections", _vChuckingDirection, allocator);
     }
@@ -61,7 +65,9 @@ void RobotBase::ManipulatorInfo::DeserializeJSON(const rapidjson::Value& value, 
 {
     orjson::LoadJsonValueByKey(value, "id", _id);
     orjson::LoadJsonValueByKey(value, "name", _name);
-    orjson::LoadJsonValueByKey(value, "transform", _tLocalTool);
+    if (orjson::LoadJsonValueByKey(value, "transform", _tLocalTool)) {
+        _tLocalTool.trans *= fUnitScale;
+    }
 
     // Now recommended to use chuckingDirection in GripperInfo. However, we still read it from ManipulatorInfo for backward compatibility, e.g. the saved scene is not migrated.
     rapidjson::Value::ConstMemberIterator itChuckingDirections = value.FindMember("chuckingDirections");

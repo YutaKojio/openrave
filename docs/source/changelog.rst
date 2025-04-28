@@ -3,6 +3,21 @@
 ChangeLog
 #########
 
+Version 0.164.0
+===============
+
+- Add member `_grippername` to GrabbedInfo and Grabbed.
+
+Version 0.163.3
+===============
+
+- Apply `fUnitScale` to applicable values when serializing KinBody to JSON.
+
+Version 0.163.2
+===============
+
+- Do not set the 4th element of _vDiffuseColor to 1 when initializing KinBody.
+
 Version 0.163.1
 ===============
 
