@@ -3,6 +3,11 @@
 ChangeLog
 #########
 
+Version 0.164.0
+===============
+
+- Add member `_grippername` to GrabbedInfo and Grabbed.
+
 Version 0.163.3
 ===============
 
