@@ -494,7 +494,7 @@ public:
         ConfigurationSpecification GetIkConfigurationSpecification(IkParameterizationType iktype, const std::string& interpolation="") const;
 
         /// \brief hashes the state of the manipulator. If options & SO_InverseKinematics, then use iktype
-        virtual void DigestHash(HashContext& hash, int options, IkParameterizationType iktype = IKP_None) const;
+        void DigestHash(HashContext& hash, int options, IkParameterizationType iktype = IKP_None) const;
 
         /// \brief Return hash of just the manipulator definition.
         const std::string& GetStructureHash() const;
@@ -1346,7 +1346,7 @@ private:
     }
 
     /// \brief Generate a hash of this structure into the provided hash context
-    virtual void DigestHash(HashContext& hash, int options) const;
+    void DigestHash(HashContext& hash, int options) const override;
 
     /// A md5 hash unique to the particular robot structure that involves manipulation and sensing components
     /// The serialization for the attached sensors will not involve any sensor specific properties (since they can change through calibration)
