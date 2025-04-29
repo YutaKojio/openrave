@@ -3126,7 +3126,7 @@ public:
                 } else {
                     updateFromInfoResult = pExistingBody->UpdateFromKinBodyInfo(*pKinBodyInfo);
                 }
-                RAVELOG_VERBOSE_FORMAT("env=%s, update body '%s' from info result %d", GetNameId() % pExistingBody->_id % static_cast<int>(updateFromInfoResult)%pExistingBody->GetNumGrabbed());
+                RAVELOG_VERBOSE_FORMAT("env=%s, update body '%s' from info result %d, numGrabbed=%d", GetNameId()%pExistingBody->_id%static_cast<int>(updateFromInfoResult)%pExistingBody->GetNumGrabbed());
 
                 // If the body didn't change at all, nothing else needs be done. Don't count it as being modified by this update.
                 if (updateFromInfoResult == UFIR_NoChange) {
