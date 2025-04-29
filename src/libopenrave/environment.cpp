@@ -113,7 +113,7 @@ void EnvironmentBase::EnvironmentBaseInfo::DeserializeJSON(const rapidjson::Valu
 /// InfoType must be one of RobotBase::RobotBaseInfo or KinBody::KinBodyInfo, depending on whether rKinBodyInfo describes a robot or a body.
 template <typename InfoType>
 void _DeserializeKinBodyInfo(const rapidjson::Value& rKinBodyInfo, const float fUnitScale, const int options, const bool isDeleted,
-                             const int existingBodyIndex, const char* pId,
+                             const int existingBodyIndex, const string_view& id,
                              std::vector<KinBody::KinBodyInfoPtr>& vBodyInfos,
                              std::unordered_map<string_view, int>& existingBodyInfoIndicesById,
                              std::unordered_map<string_view, int>& existingBodyInfoIndicesByName)
@@ -127,15 +127,15 @@ void _DeserializeKinBodyInfo(const rapidjson::Value& rKinBodyInfo, const float f
         boost::shared_ptr<InfoType> pBaseInfo(new InfoType());
         pBaseInfo->DeserializeJSON(rKinBodyInfo, fUnitScale, options);
         if (pBaseInfo->_name.empty()) {
-            RAVELOG_WARN_FORMAT("new %s id='%s' does not have a name, so skip creating", (newTypeIsRobot ? "robot" : "body")%pId);
+            RAVELOG_WARN_FORMAT("new %s id='%s' does not have a name, so skip creating", (newTypeIsRobot ? "robot" : "body")%id);
             return;
         }
 
         // If the record is valid, create a new info and be done
-        pBaseInfo->_id = pId;
+        pBaseInfo->_id.assign(id.data(), id.size());
         const size_t bodyInfoIndex = vBodyInfos.size(); // Stash the index we will be inserting this record at
         vBodyInfos.push_back(pBaseInfo);
-        RAVELOG_VERBOSE_FORMAT("created new %s id='%s'", (newTypeIsRobot ? "robot" : "body")%pId);
+        RAVELOG_VERBOSE_FORMAT("created new %s id='%s'", (newTypeIsRobot ? "robot" : "body")%id);
 
         // Ensure that we update our name/id -> body info mapping, just in case there is a later info that re-updates this body.
         // Note the need to use the info version of the id here since this map uses string_view, and 'id' is a local.
@@ -153,7 +153,7 @@ void _DeserializeKinBodyInfo(const rapidjson::Value& rKinBodyInfo, const float f
         existingBodyInfoIndicesByName.erase(existingBodyInfo->_name);
 
         // Clear it from the body list
-        RAVELOG_VERBOSE_FORMAT("deleted %s id ='%s'", (newTypeIsRobot ? "robot" : "body")%pId);
+        RAVELOG_VERBOSE_FORMAT("deleted %s id ='%s'", (newTypeIsRobot ? "robot" : "body")%id);
         existingBodyInfo.reset();
         return;
     }
@@ -174,7 +174,7 @@ void _DeserializeKinBodyInfo(const rapidjson::Value& rKinBodyInfo, const float f
 
         // Replace the old record in vBodyInfos
         existingBodyInfo = newInfoPtr;
-        RAVELOG_VERBOSE_FORMAT("recreated %s as a %s id='%s'", (newTypeIsRobot ? "body" : "robot")%(newTypeIsRobot ? "robot" : "body")%pId);
+        RAVELOG_VERBOSE_FORMAT("recreated %s as a %s id='%s'", (newTypeIsRobot ? "body" : "robot")%(newTypeIsRobot ? "robot" : "body")%id);
     }
 
     // Since it's possible that the name / id of this entry will change as a result of this update,
@@ -184,7 +184,7 @@ void _DeserializeKinBodyInfo(const rapidjson::Value& rKinBodyInfo, const float f
 
     // Update the info struct with the new input json
     existingBodyInfo->DeserializeJSON(rKinBodyInfo, fUnitScale, options);
-    existingBodyInfo->_id = pId;
+    existingBodyInfo->_id.assign(id.data(), id.size());
 
     // Restore the index mapping for this entry
     existingBodyInfoIndicesById.emplace(existingBodyInfo->_id, existingBodyIndex);
@@ -262,7 +262,7 @@ void EnvironmentBase::EnvironmentBaseInfo::DeserializeJSONWithMapping(const rapi
         // For each record in the input, check to see if we can map it to an existing body info
         for (int iInputBodyIndex = 0; iInputBodyIndex < (int)rBodies.Size(); ++iInputBodyIndex) {
             const rapidjson::Value& rKinBodyInfo = rBodies[iInputBodyIndex];
-            const char* pId = orjson::GetCStringJsonValueByKey(rKinBodyInfo, "id", "");
+            const string_view id = orjson::GetCStringViewJsonValueByKey(rKinBodyInfo, "id");
             bool isDeleted = orjson::GetJsonValueByKey<bool>(rKinBodyInfo, "__deleted__", false);
 
             // Do we have an explicit mapping for this body?
@@ -272,8 +272,8 @@ void EnvironmentBase::EnvironmentBaseInfo::DeserializeJSONWithMapping(const rapi
             }
 
             // Do we have an existing record with the same ID?
-            else if (pId[0] != 0) {
-                const std::unordered_map<string_view, int>::const_iterator existingIdIt = existingBodyInfoIndicesById.find(pId);
+            else if (!id.empty()) {
+                const std::unordered_map<string_view, int>::const_iterator existingIdIt = existingBodyInfoIndicesById.find(id);
                 if (existingIdIt != existingBodyInfoIndicesById.end()) {
                     existingBodyIndex = existingIdIt->second;
                 }
@@ -300,26 +300,26 @@ void EnvironmentBase::EnvironmentBaseInfo::DeserializeJSONWithMapping(const rapi
             if (existingBodyIndex >= 0) {
                 const KinBody::KinBodyInfoPtr& existingBodyInfo = _vBodyInfos[existingBodyIndex];
                 isExistingRobot = !!OPENRAVE_DYNAMIC_POINTER_CAST<RobotBase::RobotBaseInfo>(existingBodyInfo);
-                RAVELOG_VERBOSE_FORMAT("found existing body '%s' with id='%s', isRobot = %d", existingBodyInfo->_name%pId%isExistingRobot);
+                RAVELOG_VERBOSE_FORMAT("found existing body '%s' with id='%s', isRobot = %d", existingBodyInfo->_name%id%isExistingRobot);
             }
 
             // here we allow body infos with empty id to be created because
             // when we load things from json, some id could be missing on file
 
             bool isRobot = orjson::GetJsonValueByKey<bool>(rKinBodyInfo, "isRobot", isExistingRobot);
-            RAVELOG_VERBOSE_FORMAT("body id='%s', isRobot=%d", pId%isRobot);
+            RAVELOG_VERBOSE_FORMAT("body id='%s', isRobot=%d", id%isRobot);
 
             // If the new body info is for a robot, we need to parse the info using a RobotBase::RobotBaseInfo.
             // If it isn't, we should just us a KinBody::KinBodyInfo.
             // The update logic for both is pretty much the same, so we can just template it out.
             if (isRobot) {
                 _DeserializeKinBodyInfo<RobotBase::RobotBaseInfo>(
-                    rKinBodyInfo, fUnitScale, options, isDeleted, existingBodyIndex, pId,
+                    rKinBodyInfo, fUnitScale, options, isDeleted, existingBodyIndex, id,
                     /* mutable */ _vBodyInfos, /* mutable */ existingBodyInfoIndicesById, /* mutable */ existingBodyInfoIndicesByName);
             }
             else {
                 _DeserializeKinBodyInfo<KinBody::KinBodyInfo>(
-                    rKinBodyInfo, fUnitScale, options, isDeleted, existingBodyIndex, pId,
+                    rKinBodyInfo, fUnitScale, options, isDeleted, existingBodyIndex, id,
                     /* mutable */ _vBodyInfos, /* mutable */ existingBodyInfoIndicesById, /* mutable */ existingBodyInfoIndicesByName);
             }
         }
