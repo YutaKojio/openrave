@@ -116,6 +116,7 @@ void KinBody::_RestoreGrabbedBodiesFromSavedData(const KinBody& savedBody,
                     // _listNonCollidingLinksWhenGrabbed (in case it is not yet computed).
                     KinBody::LinkPtr pNewGrabbingLink = GetLinks().at(pGrabbingLink->GetIndex());
                     GrabbedPtr pNewGrabbed(new Grabbed(pNewGrabbedBody, pNewGrabbingLink));
+                    pNewGrabbed->_grippername = pGrabbed->_grippername;
                     pNewGrabbed->_tRelative = pGrabbed->_tRelative;
                     pNewGrabbed->_setGrabberLinkIndicesToIgnore = savedGrabbedData.setGrabberLinkIndicesToIgnore;
                     if( savedGrabbedData.listNonCollidingIsValid ) {
