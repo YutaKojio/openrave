@@ -36,7 +36,7 @@ typedef struct md5_state_s md5_state_t;
 
 namespace OpenRAVE {
 
-class HashContext
+class OPENRAVE_API HashContext
 {
 public:
     HashContext(const int precision = 4);
