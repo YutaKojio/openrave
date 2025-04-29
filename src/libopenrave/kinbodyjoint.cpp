@@ -2790,8 +2790,7 @@ void KinBody::Joint::DigestHash(HashContext& hash, int options) const
         for (int i = 0; i < GetDOF(); ++i) {
             hash << _vaxes[i];
             if (!!_vmimic.at(i)) {
-                FOREACHC(iteq, _vmimic.at(i)->_equations)
-                {
+                FOREACHC(iteq, _vmimic.at(i)->_equations) {
                     hash << *iteq;
                 }
             }
