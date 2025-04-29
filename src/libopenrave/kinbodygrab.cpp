@@ -350,6 +350,9 @@ bool KinBody::Grab(KinBodyPtr pGrabbedBody, LinkPtr pGrabbingLink, const std::se
     OPENRAVE_ASSERT_FORMAT(pGrabbingLink->GetParent().get() == this, "env=%s, pGrabbingLink name='%s' for grabbing '%s' is not part of body '%s'", GetEnv()->GetNameId()%pGrabbingLink->GetName()%pGrabbedBody->GetName()%GetName(), ORE_InvalidArguments);
     OPENRAVE_ASSERT_FORMAT(pGrabbedBody.get() != this, "env=%s, body '%s' cannot grab itself", GetEnv()->GetNameId()%pGrabbedBody->GetName(), ORE_InvalidArguments);
 
+    // Flag that the body we're grabbing has been grabbed and may be tracked by more collision checkers than just the env checker
+    pGrabbedBody->_wasEverGrabbed = true;
+
     // If pGrabbedBody has previously been grabbed, check if the grabbing condition is the same
     GrabbedPtr pPreviouslyGrabbed;
     MapGrabbedByEnvironmentIndex::iterator itPreviouslyGrabbed;
@@ -830,28 +833,26 @@ void KinBody::GrabbedInfo::DeserializeJSON(const rapidjson::Value& value, dReal 
     }
 }
 
-void KinBody::GrabbedInfo::serialize(std::ostream& os) const
+void KinBody::GrabbedInfo::DigestHash(HashContext& hash) const
 {
-    os << _grabbedname << " ";
-    os << _robotlinkname << " ";
-    os << _grippername << " ";
-    SerializeRound(os, _trelative);
-    for( std::set<std::string>::const_iterator it = _setIgnoreRobotLinkNames.begin(); it != _setIgnoreRobotLinkNames.end(); ++it ) {
-        os << (*it) << " ";
+    hash << _grabbedname;
+    hash << _robotlinkname;
+    hash << _grippername;
+    hash << _trelative;
+    for (std::set<std::string>::const_iterator it = _setIgnoreRobotLinkNames.begin(); it != _setIgnoreRobotLinkNames.end(); ++it) {
+        hash << (*it);
     }
-    if( _rGrabbedUserData.IsNull() ) {
+    if (_rGrabbedUserData.IsNull()) {
         // using 'void DumpJson(Value, ostream, unsigned int)' to let rapidjson::OStreamWrapper to handle std::ostream
-        OpenRAVE::orjson::DumpJson(_rGrabbedUserData, os);
-        os << " ";
+        hash << _rGrabbedUserData;
     }
 }
 
 std::string KinBody::GrabbedInfo::GetGrabbedInfoHash() const
 {
-    std::ostringstream ss;
-    ss << std::fixed << std::setprecision(SERIALIZATION_PRECISION);
-    serialize(ss);
-    return utils::GetMD5HashString(ss.str());
+    HashContext hashContext;
+    DigestHash(hashContext);
+    return hashContext.HexDigest();
 }
 
 void KinBody::ResetGrabbed(const std::vector<KinBody::GrabbedInfoConstPtr>& vGrabbedInfos)
@@ -919,6 +920,9 @@ void KinBody::ResetGrabbed(const std::vector<KinBody::GrabbedInfoConstPtr>& vGra
         // Assert that this grab info maps to a real body in the environment
         KinBodyPtr pBody = GetEnv()->GetKinBody(pGrabbedInfo->_grabbedname);
         OPENRAVE_ASSERT_FORMAT(!!pBody, "env=%s, body '%s' grabs invalid grab body '%s'", GetEnv()->GetNameId()%GetName()%pGrabbedInfo->_grabbedname, ORE_InvalidArguments);
+
+        // Flag that the body we're grabbing has been grabbed and may be tracked by more collision checkers than just the env checker
+        pBody->_wasEverGrabbed = true;
 
         // Check that the specified grab link is also real
         KinBody::LinkPtr pGrabbingLink = GetLink(pGrabbedInfo->_robotlinkname);

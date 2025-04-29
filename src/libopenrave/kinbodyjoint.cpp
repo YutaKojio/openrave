@@ -2781,32 +2781,33 @@ UpdateFromInfoResult KinBody::Joint::UpdateFromInfo(const KinBody::JointInfo& in
 //    _doflastsetvalues[iaxis] = dofvalue;
 //}
 
-void KinBody::Joint::serialize(std::ostream& o, int options) const
+void KinBody::Joint::DigestHash(HashContext& hash, int options) const
 {
-    if( options & SO_Kinematics ) {
-        o << dofindex << " " << jointindex << " " << _info._type << " ";
-        SerializeRound(o,_tRightNoOffset);
-        SerializeRound(o,_tLeftNoOffset);
-        for(int i = 0; i < GetDOF(); ++i) {
-            SerializeRound3(o,_vaxes[i]);
-            if( !!_vmimic.at(i) ) {
-                FOREACHC(iteq,_vmimic.at(i)->_equations) {
-                    o << *iteq << " ";
+    if (options & SO_Kinematics) {
+        hash << dofindex << jointindex << static_cast<int>(_info._type);
+        hash << _tRightNoOffset;
+        hash << _tLeftNoOffset;
+        for (int i = 0; i < GetDOF(); ++i) {
+            hash << _vaxes[i];
+            if (!!_vmimic.at(i)) {
+                FOREACHC(iteq, _vmimic.at(i)->_equations) {
+                    hash << *iteq;
                 }
             }
         }
-        o << (!_attachedbodies[0] ? -1 : _attachedbodies[0]->GetIndex()) << " " << (_attachedbodies[1]->GetIndex()) << " ";
+        hash << (!_attachedbodies[0] ? -1 : _attachedbodies[0]->GetIndex()) << (_attachedbodies[1]->GetIndex());
     }
+
     // in the past was including saving limits as part of SO_Dynamics, but given that limits change a lot when planning, should *not* include them as part of dynamics.
-    if( options & SO_JointLimits ) {
-        for(int i = 0; i < GetDOF(); ++i) {
-            SerializeRound(o,_info._vmaxvel[i]);
-            SerializeRound(o,_info._vmaxaccel[i]);
-            SerializeRound(o,_info._vmaxjerk[i]);
-            SerializeRound(o,_info._vmaxtorque[i]);
-            SerializeRound(o,_info._vmaxinertia[i]);
-            SerializeRound(o,_info._vlowerlimit[i]);
-            SerializeRound(o,_info._vupperlimit[i]);
+    if (options & SO_JointLimits) {
+        for (int i = 0; i < GetDOF(); ++i) {
+            hash << _info._vmaxvel[i];
+            hash << _info._vmaxaccel[i];
+            hash << _info._vmaxjerk[i];
+            hash << _info._vmaxtorque[i];
+            hash << _info._vmaxinertia[i];
+            hash << _info._vlowerlimit[i];
+            hash << _info._vupperlimit[i];
         }
     }
 }

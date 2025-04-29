@@ -1906,29 +1906,33 @@ AABB KinBody::Geometry::ComputeAABB(const Transform& t) const
     return _info.ComputeAABB(t);
 }
 
-void KinBody::Geometry::serialize(std::ostream& o, int options) const
+void KinBody::Geometry::DigestHash(HashContext& hash, int options) const
 {
-    SerializeRound(o,_info._t);
-    o << (int)_info._type << " ";
-    SerializeRound3(o,_info._vRenderScale);
-    if( _info._type == GT_TriMesh ) {
-        _info._meshcollision.serialize(o,options);
+    hash << _info._t;
+    hash << static_cast<int>(_info._type);
+    hash << _info._vRenderScale;
+    if (_info._type == GT_TriMesh) {
+        hash << _info._meshcollision.vertices.size();
+        hash << _info._meshcollision.vertices;
+        hash << _info._meshcollision.indices.size();
+        hash << _info._meshcollision.indices;
     }
+
     else {
-        SerializeRound3(o,_info._vGeomData);
-        if( _info._type == GT_Cage ) {
-            SerializeRound3(o,_info._vGeomData2);
+        hash << _info._vGeomData;
+        if (_info._type == GT_Cage) {
+            hash << _info._vGeomData2;
             for (size_t iwall = 0; iwall < _info._vSideWalls.size(); ++iwall) {
-                const GeometryInfo::SideWall &s = _info._vSideWalls[iwall];
-                SerializeRound(o,s.transf);
-                SerializeRound3(o,s.vExtents);
-                o << (uint32_t)s.type;
+                const GeometryInfo::SideWall& s = _info._vSideWalls[iwall];
+                hash << s.transf;
+                hash << s.vExtents;
+                hash << static_cast<uint32_t>(s.type);
             }
         }
-        else if( _info._type == GT_Container ) {
-            SerializeRound3(o,_info._vGeomData2);
-            SerializeRound3(o,_info._vGeomData3);
-            SerializeRound3(o,_info._vGeomData4);
+        else if (_info._type == GT_Container) {
+            hash << _info._vGeomData2;
+            hash << _info._vGeomData3;
+            hash << _info._vGeomData4;
         }
     }
 }

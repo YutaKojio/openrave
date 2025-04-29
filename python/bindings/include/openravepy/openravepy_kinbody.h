@@ -339,7 +339,7 @@ public:
     py::object GetAdjacentLinks() const;
     py::object GetManageData() const;
     int GetUpdateStamp() const;
-    std::string serialize(int options) const;
+    std::string DigestHash(int options) const;
     UpdateFromInfoResult UpdateFromKinBodyInfo(py::object oInfo);
     std::string GetKinematicsGeometryHash() const;
     PyStateRestoreContextBase* CreateKinBodyStateSaver(py::object options=py::none_());
