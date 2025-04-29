@@ -133,7 +133,7 @@ void _DeserializeKinBodyInfo(const rapidjson::Value& rKinBodyInfo, const float f
 
         // If the record is valid, create a new info and be done
         pBaseInfo->_id.assign(id.data(), id.size());
-        const size_t bodyInfoIndex = vBodyInfos.size(); // Stash the index we will be inserting this record at
+        const int bodyInfoIndex = (int)vBodyInfos.size(); // Stash the index we will be inserting this record at
         vBodyInfos.push_back(pBaseInfo);
         RAVELOG_VERBOSE_FORMAT("created new %s id='%s'", (newTypeIsRobot ? "robot" : "body")%id);
 
@@ -325,6 +325,6 @@ void EnvironmentBase::EnvironmentBaseInfo::DeserializeJSONWithMapping(const rapi
         }
 
         // Now that we're done processing, filter _vBodyInfos to remove any holes left from deleting bodies
-        _vBodyInfos.erase(std::remove_if(_vBodyInfos.begin(), _vBodyInfos.end(), [](const KinBody::KinBodyInfoPtr& p) { return !p; }), _vBodyInfos.end());
+        _vBodyInfos.erase(std::remove(_vBodyInfos.begin(), _vBodyInfos.end(), KinBody::KinBodyInfoPtr()), _vBodyInfos.end());
     }
 }
