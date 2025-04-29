@@ -985,6 +985,26 @@ inline const char* GetCStringJsonValueByKey(const rapidjson::Value& v, const cha
     return pDefaultValue; // not present
 }
 
+inline string_view GetCStringViewJsonValueByKey(const rapidjson::Value& v, const char* key, const string_view defaultValue = "")
+{
+    if (!v.IsObject()) {
+        throw OPENRAVE_EXCEPTION_FORMAT0("Cannot load value of non-object (\"" + std::string(GetJsonTypeName(v)) + "\") for key \"" + std::string(key) + "\".", OpenRAVE::ORE_InvalidArguments);
+    }
+    rapidjson::Value::ConstMemberIterator itMember = v.FindMember(key);
+    if (itMember != v.MemberEnd()) {
+        const rapidjson::Value& child = itMember->value;
+        if (!child.IsNull()) {
+            if (child.IsString()) {
+                return string_view{child.GetString(), child.GetStringLength()};
+            }
+            else {
+                throw OPENRAVE_EXCEPTION_FORMAT0("In GetCStringJsonValueByKey, expecting a String, but got a different object type", OpenRAVE::ORE_InvalidArguments);
+            }
+        }
+    }
+    return defaultValue; // not present
+}
+
 template<class T>
 inline T GetJsonValueByPath(const rapidjson::Value& v, const char* key) {
     T r;

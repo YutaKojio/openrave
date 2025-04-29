@@ -3004,7 +3004,7 @@ public:
         for(int inputBodyIndex = 0; inputBodyIndex < (int)info._vBodyInfos.size(); ++inputBodyIndex) {
             const KinBody::KinBodyInfoConstPtr& pKinBodyInfo = info._vBodyInfos[inputBodyIndex];
             const KinBody::KinBodyInfo& kinBodyInfo = *pKinBodyInfo;
-            RAVELOG_VERBOSE_FORMAT("env=%s, id '%s', name '%s'", GetNameId()%pKinBodyInfo->_id%pKinBodyInfo->_name);
+            RAVELOG_VERBOSE_FORMAT("env=%s, id '%s', name '%s', _vGrabbedInfos=%d", GetNameId()%pKinBodyInfo->_id%pKinBodyInfo->_name%pKinBodyInfo->_vGrabbedInfos.size());
             RobotBase::RobotBaseInfoConstPtr pRobotBaseInfo = OPENRAVE_DYNAMIC_POINTER_CAST<const RobotBase::RobotBaseInfo>(pKinBodyInfo);
             KinBodyPtr pMatchExistingBody; // matches to pKinBodyInfo
             int bodyIndex = -1; // index to vBodies to use. -1 if not used
@@ -3123,7 +3123,7 @@ public:
             if( !!pMatchExistingBody ) {
                 listBodiesTemporarilyRenamed.remove(pMatchExistingBody); // if targreted, then do not need to remove anymore
 
-                RAVELOG_VERBOSE_FORMAT("env=%s, update existing body id '%s'", GetNameId()%pMatchExistingBody->_id);
+                RAVELOG_VERBOSE_FORMAT("env=%s, update existing body id '%s', numGrabbed=%d", GetNameId()%pMatchExistingBody->_id%pMatchExistingBody->GetNumGrabbed());
                 // interface should match at this point
                 // update existing body or robot
                 UpdateFromInfoResult updateFromInfoResult = UFIR_NoChange;
@@ -3138,7 +3138,7 @@ public:
                 } else {
                     updateFromInfoResult = pMatchExistingBody->UpdateFromKinBodyInfo(*pKinBodyInfo);
                 }
-                RAVELOG_VERBOSE_FORMAT("env=%s, update body '%s' from info result %d", GetNameId() % pMatchExistingBody->_id % static_cast<int>(updateFromInfoResult));
+                RAVELOG_VERBOSE_FORMAT("env=%s, update body '%s' from info result %d, numGrabbed=%d", GetNameId() % pMatchExistingBody->_id % static_cast<int>(updateFromInfoResult)%pMatchExistingBody->GetNumGrabbed());
                 if (updateFromInfoResult == UFIR_NoChange) {
                     continue;
                 }
