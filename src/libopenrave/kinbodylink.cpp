@@ -672,32 +672,16 @@ AABB KinBody::Link::ComputeAABBForGeometryGroupFromTransform(const std::string& 
     return AABB(tLink.trans, Vector(0, 0, 0));
 }
 
-void KinBody::Link::serialize(std::ostream& o, int options) const
-{
-    o << _index << " ";
-    if( options & SO_Geometry ) {
-        o << _vGeometries.size() << " ";
-        FOREACHC(it,_vGeometries) {
-            (*it)->serialize(o,options);
-        }
-    }
-    if( options & SO_Dynamics ) {
-        SerializeRound(o,_info._tMassFrame);
-        SerializeRound(o,_info._mass);
-        SerializeRound3(o,_info._vinertiamoments);
-    }
-}
-
-void KinBody::Link::digest(HashContext& hash, int options) const
+void KinBody::Link::DigestHash(HashContext& hash, int options) const
 {
     hash << _index;
-    if( options & SO_Geometry ) {
+    if (options & SO_Geometry) {
         hash << _vGeometries.size();
-        FOREACHC(it,_vGeometries) {
-            (*it)->digest(hash, options);
+        FOREACHC(it, _vGeometries) {
+            (*it)->DigestHash(hash, options);
         }
     }
-    if( options & SO_Dynamics ) {
+    if (options & SO_Dynamics) {
         hash << _info._tMassFrame << _info._mass;
         hash << _info._vinertiamoments;
     }

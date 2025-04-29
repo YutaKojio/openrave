@@ -4320,12 +4320,11 @@ int PyKinBody::GetUpdateStamp() const
     return _pbody->GetUpdateStamp();
 }
 
-string PyKinBody::serialize(int options) const
+string PyKinBody::DigestHash(int options) const
 {
-    std::stringstream ss;
-    ss << std::setprecision(std::numeric_limits<dReal>::digits10+1);     /// have to do this or otherwise precision gets lost
-    _pbody->serialize(ss,options);
-    return ss.str();
+    HashContext hashContext;
+    _pbody->DigestHash(hashContext, options);
+    return hashContext.HexDigest();
 }
 
 UpdateFromInfoResult PyKinBody::UpdateFromKinBodyInfo(py::object pyKinBodyInfo)
@@ -6113,7 +6112,7 @@ void init_openravepy_kinbody()
                          .def("GetAdjacentLinks",&PyKinBody::GetAdjacentLinks, DOXY_FN(KinBody,GetAdjacentLinks))
                          .def("GetManageData",&PyKinBody::GetManageData, DOXY_FN(KinBody,GetManageData))
                          .def("GetUpdateStamp",&PyKinBody::GetUpdateStamp, DOXY_FN(KinBody,GetUpdateStamp))
-                         .def("serialize",&PyKinBody::serialize,PY_ARGS("options") DOXY_FN(KinBody,serialize))
+                         .def("DigestHash",&PyKinBody::DigestHash,PY_ARGS("options") DOXY_FN(KinBody,serialize))
                          .def("UpdateFromKinBodyInfo",&PyKinBody::UpdateFromKinBodyInfo,PY_ARGS("info") DOXY_FN(KinBody,UpdateFromKinBodyInfo))
                          .def("GetKinematicsGeometryHash",&PyKinBody::GetKinematicsGeometryHash, DOXY_FN(KinBody,GetKinematicsGeometryHash))
                          .def("GetAssociatedFileEntries",&PyKinBody::GetAssociatedFileEntries, DOXY_FN(KinBody,GetAssociatedFileEntries))

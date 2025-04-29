@@ -6118,35 +6118,19 @@ void KinBody::Serialize(BaseXMLWriterPtr writer, int options) const
     InterfaceBase::Serialize(writer,options);
 }
 
-void KinBody::serialize(std::ostream& o, int options) const
-{
-    o << _veclinks.size() << " ";
-    FOREACHC(it,_veclinks) {
-        (*it)->serialize(o,options);
-    }
-    o << _vecjoints.size() << " ";
-    FOREACHC(it,_vecjoints) {
-        (*it)->serialize(o,options);
-    }
-    o << _vPassiveJoints.size() << " ";
-    FOREACHC(it,_vPassiveJoints) {
-        (*it)->serialize(o,options);
-    }
-}
-
-void KinBody::digest(HashContext& hash, int options) const
+void KinBody::DigestHash(HashContext& hash, int options) const
 {
     hash << _veclinks.size();
     FOREACHC(it,_veclinks) {
-        (*it)->digest(hash,options);
+        (*it)->DigestHash(hash,options);
     }
     hash << _vecjoints.size();
     FOREACHC(it,_vecjoints) {
-        (*it)->digest(hash,options);
+        (*it)->DigestHash(hash,options);
     }
     hash << _vPassiveJoints.size();
     FOREACHC(it,_vPassiveJoints) {
-        (*it)->digest(hash,options);
+        (*it)->DigestHash(hash,options);
     }
 }
 
@@ -6168,7 +6152,7 @@ const std::string& KinBody::GetKinematicsGeometryHash() const
     if( __hashKinematicsGeometryDynamics.size() == 0 ) {
         HashContext hash;
         // should add dynamics since that affects a lot how part is treated.
-        digest(hash, SO_Kinematics|SO_Geometry|SO_Dynamics);
+        DigestHash(hash, SO_Kinematics|SO_Geometry|SO_Dynamics);
         __hashKinematicsGeometryDynamics = hash.HexDigest();
     }
     return __hashKinematicsGeometryDynamics;

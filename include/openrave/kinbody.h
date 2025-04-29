@@ -854,8 +854,8 @@ public:
             return _info.GetSideWallExists();
         }
 
-        void serialize(std::ostream& o, int options) const;
-        void digest(HashContext& hash, int options) const;
+        /// \brief Generate a hash of this structure into the provided hash context
+        void DigestHash(HashContext& hash, int options) const;
 
         /// \brief sets a new collision mesh and notifies every registered callback about it
         void SetCollisionMesh(const TriMesh& mesh);
@@ -1386,8 +1386,8 @@ public:
         /// \param vattachedlinks the array to insert all links attached to linkindex with the link itself.
         void GetRigidlyAttachedLinks(std::vector<boost::shared_ptr<Link> >& vattachedlinks) const;
 
-        void serialize(std::ostream& o, int options) const;
-        void digest(HashContext& hash, int options) const;
+        /// \brief Generate a hash of this structure into the provided hash context
+        void DigestHash(HashContext& hash, int options) const;
 
         /// \brief return a map of custom float parameters
         inline const std::map<std::string, std::vector<dReal> >& GetFloatParameters() const {
@@ -2024,8 +2024,8 @@ public:
         /// \brief \see GetWrapOffset
         void SetWrapOffset(dReal offset, int iaxis=0);
 
-        void serialize(std::ostream& o, int options) const;
-        void digest(HashContext& hash, int options) const;
+        /// \brief Generate a hash of this structure into the provided hash context
+        void DigestHash(HashContext& hash, int options) const;
 
         /// @name Internal Hierarchy Methods
         //@{
@@ -2276,7 +2276,7 @@ public:
         void SerializeJSON(rapidjson::Value& value, rapidjson::Document::AllocatorType& allocator, dReal fUnitScale, int options=0) const override;
         void DeserializeJSON(const rapidjson::Value& value, dReal fUnitScale, int options) override;
 
-        void serialize(std::ostream& o) const; ///< used only for hash computation
+        void DigestHash(HashContext& hash) const;
         std::string GetGrabbedInfoHash() const;
 
         std::string _id; ///< unique id of the grabbed info
@@ -3609,9 +3609,8 @@ public:
 
     //@}
 
-    /// only used for hashes...
-    virtual void serialize(std::ostream& o, int options) const;
-    virtual void digest(HashContext& hash, int options) const;
+    /// \brief Generate a hash of this structure into the provided hash context
+    virtual void DigestHash(HashContext& hash, int options) const;
 
     inline KinBodyPtr shared_kinbody() {
         return boost::static_pointer_cast<KinBody>(shared_from_this());

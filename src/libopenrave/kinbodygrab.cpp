@@ -833,28 +833,26 @@ void KinBody::GrabbedInfo::DeserializeJSON(const rapidjson::Value& value, dReal 
     }
 }
 
-void KinBody::GrabbedInfo::serialize(std::ostream& os) const
+void KinBody::GrabbedInfo::DigestHash(HashContext& hash) const
 {
-    os << _grabbedname << " ";
-    os << _robotlinkname << " ";
-    os << _grippername << " ";
-    SerializeRound(os, _trelative);
-    for( std::set<std::string>::const_iterator it = _setIgnoreRobotLinkNames.begin(); it != _setIgnoreRobotLinkNames.end(); ++it ) {
-        os << (*it) << " ";
+    hash << _grabbedname;
+    hash << _robotlinkname;
+    hash << _grippername;
+    hash << _trelative;
+    for (std::set<std::string>::const_iterator it = _setIgnoreRobotLinkNames.begin(); it != _setIgnoreRobotLinkNames.end(); ++it) {
+        hash << (*it);
     }
-    if( _rGrabbedUserData.IsNull() ) {
+    if (_rGrabbedUserData.IsNull()) {
         // using 'void DumpJson(Value, ostream, unsigned int)' to let rapidjson::OStreamWrapper to handle std::ostream
-        OpenRAVE::orjson::DumpJson(_rGrabbedUserData, os);
-        os << " ";
+        hash << _rGrabbedUserData;
     }
 }
 
 std::string KinBody::GrabbedInfo::GetGrabbedInfoHash() const
 {
-    std::ostringstream ss;
-    ss << std::fixed << std::setprecision(SERIALIZATION_PRECISION);
-    serialize(ss);
-    return utils::GetMD5HashString(ss.str());
+    HashContext hashContext;
+    DigestHash(hashContext);
+    return hashContext.HexDigest();
 }
 
 void KinBody::ResetGrabbed(const std::vector<KinBody::GrabbedInfoConstPtr>& vGrabbedInfos)

@@ -1906,34 +1906,7 @@ AABB KinBody::Geometry::ComputeAABB(const Transform& t) const
     return _info.ComputeAABB(t);
 }
 
-void KinBody::Geometry::serialize(std::ostream& o, int options) const
-{
-    SerializeRound(o,_info._t);
-    o << (int)_info._type << " ";
-    SerializeRound3(o,_info._vRenderScale);
-    if( _info._type == GT_TriMesh ) {
-        _info._meshcollision.serialize(o,options);
-    }
-    else {
-        SerializeRound3(o,_info._vGeomData);
-        if( _info._type == GT_Cage ) {
-            SerializeRound3(o,_info._vGeomData2);
-            for (size_t iwall = 0; iwall < _info._vSideWalls.size(); ++iwall) {
-                const GeometryInfo::SideWall &s = _info._vSideWalls[iwall];
-                SerializeRound(o,s.transf);
-                SerializeRound3(o,s.vExtents);
-                o << (uint32_t)s.type;
-            }
-        }
-        else if( _info._type == GT_Container ) {
-            SerializeRound3(o,_info._vGeomData2);
-            SerializeRound3(o,_info._vGeomData3);
-            SerializeRound3(o,_info._vGeomData4);
-        }
-    }
-}
-
-void KinBody::Geometry::digest(HashContext& hash, int options) const
+void KinBody::Geometry::DigestHash(HashContext& hash, int options) const
 {
     hash << _info._t;
     hash << static_cast<int>(_info._type);
