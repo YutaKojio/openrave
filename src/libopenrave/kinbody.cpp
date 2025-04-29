@@ -6067,6 +6067,7 @@ void KinBody::Clone(InterfaceBaseConstPtr preference, int cloningoptions)
 
     _lastModifiedAtUS = r->_lastModifiedAtUS;
     _revisionId = r->_revisionId;
+    _wasEverGrabbed = r->_wasEverGrabbed;
 
     _nUpdateStampId++; // update the stamp instead of copying
 }
