@@ -2995,10 +2995,10 @@ public:
         std::unordered_set<string_view> bodyNamesToUpdate;
         for (const KinBody::KinBodyInfoPtr& pKinBodyInfo : info._vBodyInfos) {
             // If we have more than one info that targets the same id / body name, throw - UpdateFromInfo is not designed to update the same object more than once in a call
-            if (!bodyIdsToUpdate.emplace(pKinBodyInfo->_id).second) {
+            if (!pKinBodyInfo->_id.empty() && !bodyIdsToUpdate.emplace(pKinBodyInfo->_id).second) {
                 throw OPENRAVE_EXCEPTION_FORMAT(_("duplicate body info ID '%s' in call to UpdateFromInfo"), pKinBodyInfo->_id, ORE_InvalidArguments);
             }
-            if (!bodyNamesToUpdate.emplace(pKinBodyInfo->_name).second) {
+            if (!pKinBodyInfo->_name.empty() && !bodyNamesToUpdate.emplace(pKinBodyInfo->_name).second) {
                 throw OPENRAVE_EXCEPTION_FORMAT(_("duplicate body info name '%s' in call to UpdateFromInfo"), pKinBodyInfo->_name, ORE_InvalidArguments);
             }
         }
