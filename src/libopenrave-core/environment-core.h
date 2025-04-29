@@ -3076,7 +3076,7 @@ public:
                     RAVELOG_DEBUG_FORMAT("env=%s, have to clear body name '%s' id=%s for loading body with id=%s", GetNameId() % pExistingBodySameName->GetName() % pExistingBodySameName->GetId() % pExistingBody->GetId());
 
                     // Since we are renaming a body, and our existing body indices map uses string views over our body names, need to make sure we remove this body's entry / add it back after rename
-                    existingBodyIndicesByName.erase(existingBodyByNameIt);
+                    existingBodyIndicesByName.erase(itExistingBodyIndexByName);
                     pExistingBodySameName->SetName(_GetUniqueName(pExistingBodySameName->GetName() + "_tempRenamedDueToConflict_"));
                     existingBodyIndicesByName.emplace(pExistingBodySameName->GetName(), existingBodyIndexSameName);
                     listBodiesTemporarilyRenamed.push_back(pExistingBodySameName);
