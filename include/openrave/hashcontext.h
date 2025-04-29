@@ -101,12 +101,10 @@ public:
 
         // For true/false, treat them as a single byte boolean
         case rapidjson::kFalseType: {
-            static constexpr const uint8_t FALSE = 0;
-            _Append(&FALSE, sizeof(FALSE));
+            *this << (uint8_t)0;
         }
         case rapidjson::kTrueType: {
-            static constexpr const uint8_t TRUE = 1;
-            _Append(&TRUE, sizeof(TRUE));
+            *this << (uint8_t)1;
         }
 
         // For strings, hash the underlying string data
