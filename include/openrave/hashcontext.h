@@ -102,14 +102,17 @@ public:
         // For true/false, treat them as a single byte boolean
         case rapidjson::kFalseType: {
             *this << (uint8_t)0;
+            break;
         }
         case rapidjson::kTrueType: {
             *this << (uint8_t)1;
+            break;
         }
 
         // For strings, hash the underlying string data
         case rapidjson::kStringType: {
             _Append((const uint8_t*)rValue.GetString(), rValue.GetStringLength());
+            break;
         }
 
         // For numbers, delegate to other overrides
@@ -129,6 +132,7 @@ public:
             else {
                 *this << rValue.GetUint64();
             }
+            break;
         }
 
         // For arrays, recurse on each element
@@ -136,6 +140,7 @@ public:
             for (rapidjson::Value::ConstValueIterator valueIt = rValue.Begin(); valueIt != rValue.End(); valueIt++) {
                 *this << *valueIt;
             }
+            break;
         }
 
         // For objects, recurse for each k:v pair
@@ -143,6 +148,7 @@ public:
             for (rapidjson::Value::ConstMemberIterator memberIt = rValue.MemberBegin(); memberIt != rValue.MemberEnd(); memberIt++) {
                 *this << memberIt->name << memberIt->value;
             }
+            break;
         }
         }
         return *this;
