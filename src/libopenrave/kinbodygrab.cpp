@@ -842,8 +842,7 @@ void KinBody::GrabbedInfo::DigestHash(HashContext& hash) const
     for (std::set<std::string>::const_iterator it = _setIgnoreRobotLinkNames.begin(); it != _setIgnoreRobotLinkNames.end(); ++it) {
         hash << (*it);
     }
-    if (_rGrabbedUserData.IsNull()) {
-        // using 'void DumpJson(Value, ostream, unsigned int)' to let rapidjson::OStreamWrapper to handle std::ostream
+    if (!_rGrabbedUserData.IsNull()) {
         hash << _rGrabbedUserData;
     }
 }
