@@ -713,7 +713,7 @@ class TestKinematics(EnvironmentSetup):
 
     def test_hashes(self):
         robot = self.LoadRobot(g_robotfiles[0])
-        s = robot.serialize(SerializationOptions.Kinematics)
+        s = robot.DigestHash(SerializationOptions.Kinematics)
         hash0 = robot.GetKinematicsGeometryHash()
         robot.SetLinkTransformations([randtrans() for link in robot.GetLinks()],zeros(robot.GetDOF()))
         hash1 = robot.GetKinematicsGeometryHash()
