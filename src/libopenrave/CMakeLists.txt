@@ -5,6 +5,7 @@ set(openrave_lib_SOURCES
   controller.cpp
   environment.cpp
   fparsermulti.h
+  hashcontext.cpp
   iksolver.cpp
   interface.cpp
   kinbody.cpp

@@ -405,10 +405,10 @@ UpdateFromInfoResult RobotBase::AttachedSensor::UpdateFromInfo(const RobotBase::
     return updateFromInfoResult;
 }
 
-void RobotBase::AttachedSensor::serialize(std::ostream& o, int options) const
+void RobotBase::AttachedSensor::DigestHash(HashContext& o, int options) const
 {
     o << (pattachedlink.expired() ? -1 : LinkPtr(pattachedlink)->GetIndex()) << " ";
-    SerializeRound(o,_info._trelative);
+    o << _info._trelative;
     o << (!pdata ? -1 : pdata->GetType()) << " ";
     // it is also important to serialize some of the geom parameters for the sensor (in case models are cached to it)
     if( !!_psensor ) {
@@ -435,11 +435,10 @@ void RobotBase::AttachedSensor::serialize(std::ostream& o, int options) const
 
 const std::string& RobotBase::AttachedSensor::GetStructureHash() const
 {
-    if( __hashstructure.size() == 0 ) {
-        ostringstream ss;
-        ss << std::fixed << std::setprecision(SERIALIZATION_PRECISION);
-        serialize(ss,SO_RobotSensors);
-        __hashstructure = utils::GetMD5HashString(ss.str());
+    if (__hashstructure.empty()) {
+        HashContext hashContext;
+        DigestHash(hashContext, SO_RobotSensors);
+        __hashstructure = hashContext.HexDigest();
     }
     return __hashstructure;
 }
@@ -2619,17 +2618,17 @@ void RobotBase::Clone(InterfaceBaseConstPtr preference, int cloningoptions)
     }
 }
 
-void RobotBase::serialize(std::ostream& o, int options) const
+void RobotBase::DigestHash(HashContext& hash, int options) const
 {
-    KinBody::serialize(o,options);
-    if( options & SO_RobotManipulators ) {
-        FOREACHC(itmanip,_vecManipulators) {
-            (*itmanip)->serialize(o,options);
+    KinBody::DigestHash(hash, options);
+    if (options & SO_RobotManipulators) {
+        FOREACHC(itmanip, _vecManipulators) {
+            (*itmanip)->DigestHash(hash, options);
         }
     }
-    if( options & SO_RobotSensors ) {
-        FOREACHC(itsensor,_vecAttachedSensors) {
-            (*itsensor)->serialize(o,options);
+    if (options & SO_RobotSensors) {
+        FOREACHC(itsensor, _vecAttachedSensors) {
+            (*itsensor)->DigestHash(hash, options);
         }
     }
 }
@@ -2637,11 +2636,10 @@ void RobotBase::serialize(std::ostream& o, int options) const
 const std::string& RobotBase::GetRobotStructureHash() const
 {
     CHECK_INTERNAL_COMPUTATION;
-    if( __hashrobotstructure.size() == 0 ) {
-        ostringstream ss;
-        ss << std::fixed << std::setprecision(SERIALIZATION_PRECISION);
-        serialize(ss,SO_Kinematics|SO_Geometry|SO_RobotManipulators|SO_RobotSensors);
-        __hashrobotstructure = utils::GetMD5HashString(ss.str());
+    if (__hashrobotstructure.empty()) {
+        HashContext hashContext;
+        DigestHash(hashContext, SO_Kinematics | SO_Geometry | SO_RobotManipulators | SO_RobotSensors);
+        __hashrobotstructure = hashContext.HexDigest();
     }
     return __hashrobotstructure;
 }

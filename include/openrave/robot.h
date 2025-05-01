@@ -493,8 +493,8 @@ public:
         /// Note that the return type is by-value, so should not be used in iteration
         ConfigurationSpecification GetIkConfigurationSpecification(IkParameterizationType iktype, const std::string& interpolation="") const;
 
-        /// \brief returns the serialization of the manipulator. If options & SO_InverseKinematics, then use iktype
-        void serialize(std::ostream& o, int options, IkParameterizationType iktype=IKP_None) const;
+        /// \brief hashes the state of the manipulator. If options & SO_InverseKinematics, then use iktype
+        void DigestHash(HashContext& hash, int options, IkParameterizationType iktype = IKP_None) const;
 
         /// \brief Return hash of just the manipulator definition.
         const std::string& GetStructureHash() const;
@@ -660,7 +660,8 @@ public:
 
         void SetRelativeTransform(const Transform& t);
 
-        void serialize(std::ostream& o, int options) const;
+        /// \brief Generate a hash of this structure into the provided hash context
+        void DigestHash(HashContext& hash, int options) const;
 
         /// \brief return hash of the sensor definition
         const std::string& GetStructureHash() const;
@@ -841,8 +842,6 @@ public:
         inline const std::string& GetName() const {
             return _info._name;
         }
-
-        // void serialize(std::ostream& o, int options) const;
 
         /// \brief return hash of the connected body info
         const std::string& GetInfoHash() const;
@@ -1346,7 +1345,8 @@ private:
         return true;
     }
 
-    virtual void serialize(std::ostream& o, int options) const override;
+    /// \brief Generate a hash of this structure into the provided hash context
+    void DigestHash(HashContext& hash, int options) const override;
 
     /// A md5 hash unique to the particular robot structure that involves manipulation and sensing components
     /// The serialization for the attached sensors will not involve any sensor specific properties (since they can change through calibration)
