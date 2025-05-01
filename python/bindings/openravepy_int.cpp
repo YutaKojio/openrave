@@ -75,9 +75,10 @@ py::object toPyObject(const rapidjson::Value& value)
     }
     case rapidjson::kArrayType:
     {
-        py::list l;
+        py::list l(value.Size());
+        size_t writeIndex = 0;
         for (rapidjson::Value::ConstValueIterator it = value.Begin(); it != value.End(); ++it) {
-            l.append(toPyObject(*it));
+            l[writeIndex++] = toPyObject(*it);
         }
         return l;
     }
