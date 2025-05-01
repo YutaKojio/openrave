@@ -3029,13 +3029,13 @@ public:
         std::unordered_set<KinBody*> setBodiesWithMatchingInfos;
 
         // internally manipulates _vecbodies using _AddKinBody/_AddRobot/_RemoveKinBodyFromIterator
-        for(const KinBody::KinBodyInfoPtr& pKinBodyInfo : info._vBodyInfos ) {
+        for(const KinBody::KinBodyInfoPtr& pKinBodyInfo : info._vBodyInfos) {
             const KinBody::KinBodyInfo& kinBodyInfo = *pKinBodyInfo;
             RAVELOG_VERBOSE_FORMAT("env=%s, id '%s', name '%s', _vGrabbedInfos=%d", GetNameId()%pKinBodyInfo->_id%pKinBodyInfo->_name%pKinBodyInfo->_vGrabbedInfos.size());
             RobotBase::RobotBaseInfoConstPtr pRobotBaseInfo = OPENRAVE_DYNAMIC_POINTER_CAST<const RobotBase::RobotBaseInfo>(pKinBodyInfo);
 
             // Try and match this body info to an existing body
-            KinBodyPtr pExistingBody; // Will be loaded with the existing body to update, if any
+            KinBodyPtr pMatchExistingBody; // Will be loaded with the existing body to update, if any
             do {
                 // Check if we have bodies with matching names / ids
                 const std::unordered_map<string_view, int>::iterator itExistingBodyIndexById = existingBodyIndicesById.find(kinBodyInfo._id);
@@ -3054,15 +3054,15 @@ public:
                 }
 
                 // If we matched a body to reuse, latch it out and clear the mappings so that we can't double-process it
-                pExistingBody = std::move(vBodies[existingBodyIndex]); // Invalidate this slot in vBodies to make sure we don't accidentally re-use it
-                OPENRAVE_ASSERT_OP(pExistingBody, !=, KinBodyPtr()); // Only valid entries should exist in our lookup maps
-                existingBodyIndicesById.erase(pExistingBody->GetId()); // Also ensures no dangling string_views in the event this body gets destroyed later in the loop
-                existingBodyIndicesByName.erase(pExistingBody->GetName());
+                pMatchExistingBody = std::move(vBodies[existingBodyIndex]); // Invalidate this slot in vBodies to make sure we don't accidentally re-use it
+                OPENRAVE_ASSERT_OP(pMatchExistingBody, !=, KinBodyPtr()); // Only valid entries should exist in our lookup maps
+                existingBodyIndicesById.erase(pMatchExistingBody->GetId()); // Also ensures no dangling string_views in the event this body gets destroyed later in the loop
+                existingBodyIndicesByName.erase(pMatchExistingBody->GetName());
 
                 // If we matched an existing body, but that body is of a different interface to the info (e.g robot vs plain body), then we can't just update, need to recreate it.
-                bool bInterfaceMatches = pExistingBody->GetXMLId() == pKinBodyInfo->_interfaceType;
-                if (!bInterfaceMatches || pExistingBody->IsRobot() != pKinBodyInfo->_isRobot) {
-                    KinBodyPtr pBodyToRemove = std::move(pExistingBody); // Invalidates existing body output
+                bool bInterfaceMatches = pMatchExistingBody->GetXMLId() == pKinBodyInfo->_interfaceType;
+                if (!bInterfaceMatches || pMatchExistingBody->IsRobot() != pKinBodyInfo->_isRobot) {
+                    KinBodyPtr pBodyToRemove = std::move(pMatchExistingBody); // Invalidates existing body output
                     RAVELOG_VERBOSE_FORMAT("env=%s, body '%s' interface is changed, remove old body from environment. xmlid=%s, _interfaceType=%s, isRobot %d != %d", GetNameId() % pBodyToRemove->_id % pBodyToRemove->GetXMLId() % pKinBodyInfo->_interfaceType % pBodyToRemove->IsRobot() % pKinBodyInfo->_isRobot);
                     vRemovedBodies.push_back(pBodyToRemove);
 
@@ -3076,15 +3076,15 @@ public:
                 // If we matched by ID instead of name, it's possible there exists another body in the env with the same name as our body info.
                 // This would cause a conflict if we try and update our current (id matched body) to have the same name.
                 // Since the other body with the same name might get processed again later (by id?), temporarily rename it so that we can continue.
-                if (!!pExistingBody && existingBodyIndex != existingBodyIndexSameName && existingBodyIndexSameName >= 0) {
-                    const KinBodyPtr& pExistingBodySameName = vBodies[existingBodyIndexSameName];
-                    RAVELOG_DEBUG_FORMAT("env=%s, have to clear body name '%s' id=%s for loading body with id=%s", GetNameId() % pExistingBodySameName->GetName() % pExistingBodySameName->GetId() % pExistingBody->GetId());
+                if (!!pMatchExistingBody && existingBodyIndex != existingBodyIndexSameName && existingBodyIndexSameName >= 0) {
+                    const KinBodyPtr& pMatchExistingBodySameName = vBodies[existingBodyIndexSameName];
+                    RAVELOG_DEBUG_FORMAT("env=%s, have to clear body name '%s' id=%s for loading body with id=%s", GetNameId() % pMatchExistingBodySameName->GetName() % pMatchExistingBodySameName->GetId() % pMatchExistingBody->GetId());
 
                     // Since we are renaming a body, and our existing body indices map uses string views over our body names, need to make sure we remove this body's entry / add it back after rename
                     existingBodyIndicesByName.erase(itExistingBodyIndexByName);
-                    pExistingBodySameName->SetName(_GetUniqueName(pExistingBodySameName->GetName() + "_tempRenamedDueToConflict_"));
-                    existingBodyIndicesByName.emplace(pExistingBodySameName->GetName(), existingBodyIndexSameName);
-                    listBodiesTemporarilyRenamed.push_back(pExistingBodySameName);
+                    pMatchExistingBodySameName->SetName(_GetUniqueName(pMatchExistingBodySameName->GetName() + "_tempRenamedDueToConflict_"));
+                    existingBodyIndicesByName.emplace(pMatchExistingBodySameName->GetName(), existingBodyIndexSameName);
+                    listBodiesTemporarilyRenamed.push_back(pMatchExistingBodySameName);
                 }
             } while (0);
 
@@ -3098,25 +3098,25 @@ public:
             std::vector<std::set<int>> linkIndicesToIgnore;
 
             // Were we able to match an existing body?
-            if (!!pExistingBody) {
-                RAVELOG_VERBOSE_FORMAT("env=%s, update existing body id '%s', numGrabbed=%d", GetNameId()%pExistingBody->_id%pExistingBody->GetNumGrabbed());
+            if( !!pMatchExistingBody ) {
+                RAVELOG_VERBOSE_FORMAT("env=%s, update existing body id '%s', numGrabbed=%d", GetNameId()%pMatchExistingBody->_id%pMatchExistingBody->GetNumGrabbed());
 
                 // If we have an existing body to update, make sure that it gets removed from the list of temporarily renamed bodies,
                 // since we're about to give it a proper name / don't want it to get garbage collected later.
-                listBodiesTemporarilyRenamed.remove(pExistingBody);
+                listBodiesTemporarilyRenamed.remove(pMatchExistingBody);
 
                 // We know that this body has a matching info in the list we were given, so note that it was directly selected by this update.
                 // This doesn't matter for OnlySpecifiedBodiesExact, but if that option is not passed, we need to know to keep it.
-                setBodiesWithMatchingInfos.emplace(pExistingBody.get());
+                setBodiesWithMatchingInfos.emplace(pMatchExistingBody.get());
 
                 // Interface should match at this point, since if we had a mismatch in the previous step we should have removed the body already
-                OPENRAVE_ASSERT_OP(pKinBodyInfo->_isRobot, ==, pExistingBody->IsRobot());
+                OPENRAVE_ASSERT_OP(pKinBodyInfo->_isRobot, ==, pMatchExistingBody->IsRobot());
 
                 // Perform the actual update, making sure to call the correct virtual method if this is a robot
 
                 UpdateFromInfoResult updateFromInfoResult = UFIR_NoChange;
-                if (pKinBodyInfo->_isRobot && pExistingBody->IsRobot()) {
-                    RobotBasePtr pRobot = RaveInterfaceCast<RobotBase>(pExistingBody);
+                if (pKinBodyInfo->_isRobot && pMatchExistingBody->IsRobot()) {
+                    RobotBasePtr pRobot = RaveInterfaceCast<RobotBase>(pMatchExistingBody);
                     if( !!pRobotBaseInfo ) {
                         updateFromInfoResult = pRobot->UpdateFromRobotInfo(*pRobotBaseInfo);
                     }
@@ -3124,9 +3124,9 @@ public:
                         updateFromInfoResult = pRobot->UpdateFromKinBodyInfo(*pKinBodyInfo);
                     }
                 } else {
-                    updateFromInfoResult = pExistingBody->UpdateFromKinBodyInfo(*pKinBodyInfo);
+                    updateFromInfoResult = pMatchExistingBody->UpdateFromKinBodyInfo(*pKinBodyInfo);
                 }
-                RAVELOG_VERBOSE_FORMAT("env=%s, update body '%s' from info result %d, numGrabbed=%d", GetNameId()%pExistingBody->_id%static_cast<int>(updateFromInfoResult)%pExistingBody->GetNumGrabbed());
+                RAVELOG_VERBOSE_FORMAT("env=%s, update body '%s' from info result %d, numGrabbed=%d", GetNameId() % pMatchExistingBody->_id % static_cast<int>(updateFromInfoResult)%pMatchExistingBody->GetNumGrabbed());
 
                 // If the body didn't change at all, nothing else needs be done. Don't count it as being modified by this update.
                 if (updateFromInfoResult == UFIR_NoChange) {
@@ -3134,11 +3134,11 @@ public:
                 }
 
                 // If the body was either updated or couldn't be updated, bump the modification time and add it to our set of modified bodies
-                if (info._lastModifiedAtUS > pExistingBody->_lastModifiedAtUS) {
-                    pExistingBody->_lastModifiedAtUS = info._lastModifiedAtUS;
+                if (info._lastModifiedAtUS > pMatchExistingBody->_lastModifiedAtUS) {
+                    pMatchExistingBody->_lastModifiedAtUS = info._lastModifiedAtUS;
                 }
-                pExistingBody->_revisionId = info._revisionId;
-                vModifiedBodies.push_back(pExistingBody);
+                pMatchExistingBody->_revisionId = info._revisionId;
+                vModifiedBodies.push_back(pMatchExistingBody);
 
                 // If the body could be updated without being removed from the environment, we're all set at this point.
                 if (updateFromInfoResult == UFIR_Success) {
@@ -3148,7 +3148,8 @@ public:
                 // In some cases, the body can't be updated while still added to the environment (TODO: why?)
                 // If this happens, we need to first save information about which bodies are _grabbing_ this body (grabs are known from the body's own info)
                 // so that we can restore these grabs when the body is added back into the environment.
-                for (const KinBodyWeakPtr& pBody : pExistingBody->_listAttachedBodies) { // Search the list of attached bodies for grabbers instead of the whole env
+                for (const KinBodyWeakPtr& pBody : pMatchExistingBody->_listAttachedBodies) {
+                    // Search the list of attached bodies for grabbers instead of the whole env
                     KinBodyPtr pAttached = pBody.lock();
                     if (!pAttached) {
                         continue;
@@ -3157,7 +3158,7 @@ public:
                     for (const KinBody::MapGrabbedByEnvironmentIndex::value_type& grabPair : pAttached->_grabbedBodiesByEnvironmentIndex) {
                         const GrabbedPtr& pGrabbed = grabPair.second;
                         KinBodyConstPtr pGrabbedBody = pGrabbed->_pGrabbedBody.lock();
-                        if (!!pGrabbedBody && pGrabbedBody.get() == &*pExistingBody) {
+                        if( !!pGrabbedBody && pGrabbedBody.get() == &*pMatchExistingBody ) {
                             // This body is grabbing the body we are about to remove - save all of the grab info so that we can restore it.
                             pGrabbingBodies.push_back(pAttached);
                             pGrabbingLinks.push_back(pGrabbed->_pGrabbingLink);
@@ -3172,14 +3173,14 @@ public:
                 // Remove this body from the environment so that we can try updating it again
                 {
                     ExclusiveLock lock253(_mutexInterfaces);
-                    vector<KinBodyPtr>::iterator itExisting = std::find(_vecbodies.begin(), _vecbodies.end(), pExistingBody);
-                    if (itExisting != _vecbodies.end()) {
-                        _InvalidateKinBodyFromEnvBodyIndex(pExistingBody->GetEnvironmentBodyIndex());
+                    vector<KinBodyPtr>::iterator itExisting = std::find(_vecbodies.begin(), _vecbodies.end(), pMatchExistingBody);
+                    if( itExisting != _vecbodies.end() ) {
+                        _InvalidateKinBodyFromEnvBodyIndex(pMatchExistingBody->GetEnvironmentBodyIndex()); // essentially removes the entry from the environment
                     }
                 }
 
-                if (pExistingBody->IsRobot()) {
-                    RobotBasePtr pRobot = RaveInterfaceCast<RobotBase>(pExistingBody);
+                if (pMatchExistingBody->IsRobot()) {
+                    RobotBasePtr pRobot = RaveInterfaceCast<RobotBase>(pMatchExistingBody);
                     if (updateFromInfoResult == UFIR_RequireRemoveFromEnvironment) {
                         // first try udpating again after removing from env
                         if( !!pRobotBaseInfo ) {
@@ -3206,16 +3207,16 @@ public:
                 else {
                     if (updateFromInfoResult == UFIR_RequireRemoveFromEnvironment) {
                         // first try udpating again after removing from env
-                        updateFromInfoResult = pExistingBody->UpdateFromKinBodyInfo(*pKinBodyInfo);
+                        updateFromInfoResult = pMatchExistingBody->UpdateFromKinBodyInfo(*pKinBodyInfo);
                     }
                     if (updateFromInfoResult != UFIR_NoChange && updateFromInfoResult != UFIR_Success) {
                         // have to reinit, but preserves the current body id since it could potentially clash with what pKinBodyInfo has
-                        KinBodyIdSaver bodyIdSaver(pExistingBody);
-                        pExistingBody->InitFromKinBodyInfo(*pKinBodyInfo);
+                        KinBodyIdSaver bodyIdSaver(pMatchExistingBody);
+                        pMatchExistingBody->InitFromKinBodyInfo(*pKinBodyInfo);
                     }
 
-                    pInitBody = pExistingBody;
-                    _AddKinBody(pExistingBody, IAM_StrictNameChecking); // internally locks _mutexInterfaces, name guarnateed to be unique
+                    pInitBody = pMatchExistingBody;
+                    _AddKinBody(pMatchExistingBody, IAM_StrictNameChecking); // internally locks _mutexInterfaces, name guarnateed to be unique
                 }
             }
 
@@ -3298,7 +3299,7 @@ public:
         }
 
         // If we were not called with OnlySpecifiedBodiesExact, then any bodies that did not have matching body infos should be removed from the environment.
-        if (updateMode != UFIM_OnlySpecifiedBodiesExact) {
+        if( updateMode != UFIM_OnlySpecifiedBodiesExact ) {
             // Iterate the bodies in the environment and remove any that were _not_ linked to a body info
             ExclusiveLock lockInterfaces(_mutexInterfaces);
             for (const KinBodyPtr& environmentBody : _vecbodies) {
@@ -3313,19 +3314,20 @@ public:
                 }
 
                 // If the body didn't get matched, add it to the set of removed bodies and erase it from the environment
+                RAVELOG_VERBOSE_FORMAT("remove extra body env=%s, id=%s, name=%s", GetNameId()%environmentBody->_id%environmentBody->_name);
                 vRemovedBodies.emplace_back(_InvalidateKinBodyFromEnvBodyIndex(environmentBody->GetEnvironmentBodyIndex()));
             }
         }
 
-        for (KinBodyPtr pRenamedBody : listBodiesTemporarilyRenamed) {
-            RAVELOG_INFO_FORMAT("env=%s, body '%s' (id=%s) was renamed to avoid a name conflict, but not modified to another name, so assuming that it should be deleted", GetNameId() % pRenamedBody->GetName() % pRenamedBody->GetId());
+        for(KinBodyPtr pRenamedBody : listBodiesTemporarilyRenamed) {
+            RAVELOG_INFO_FORMAT("env=%s, body '%s' (id=%s) was renamed to avoid a name conflict, but not modified to another name, so assuming that it should be deleted", GetNameId()%pRenamedBody->GetName()%pRenamedBody->GetId());
             Remove(pRenamedBody);
             vRemovedBodies.push_back(pRenamedBody);
         }
 
         // After all bodies are added, update the grab states
         std::vector<KinBody::GrabbedInfoConstPtr> vGrabbedInfos;
-        for (const KinBody::KinBodyInfoPtr& pKinBodyInfo : info._vBodyInfos) {
+        for(const KinBody::KinBodyInfoPtr& pKinBodyInfo : info._vBodyInfos) {
             const std::string& bodyName = pKinBodyInfo->_name;
 
             // Find existing body in the env, use name since that is more guaranteed to be unique
