@@ -1655,11 +1655,30 @@ public:
         }
     }
 
+    virtual void GetBodiesWithReadableInterface(std::vector<KinBodyPtr>& bodies, const std::string& readableInterfaceName, uint64_t timeout) const override
+    {
+        TimedSharedLock _lockMutexInterfaces(_mutexInterfaces, timeout);
+        if (!_lockMutexInterfaces) {
+            throw OPENRAVE_EXCEPTION_FORMAT(_("timeout of %f s failed"), (1e-6 * static_cast<double>(timeout)), ORE_Timeout);
+        }
+        bodies.clear();
+        bodies.reserve(_vecbodies.size());
+        for (const KinBodyPtr& pbody : _vecbodies) {
+            if (!pbody) {
+                continue;
+            }
+            if (!pbody->HasReadableInterface(readableInterfaceName)) {
+                continue;
+            }
+            bodies.push_back(pbody);
+        }
+    }
+
     virtual void GetRobots(std::vector<RobotBasePtr>& robots, uint64_t timeout) const override
     {
         TimedSharedLock lock186(_mutexInterfaces, timeout);
         if (!lock186) {
-            throw OPENRAVE_EXCEPTION_FORMAT(_("timeout of %f s failed"),(1e-6*static_cast<double>(timeout)),ORE_Timeout);
+            throw OPENRAVE_EXCEPTION_FORMAT(_("timeout of %f s failed"), (1e-6 * static_cast<double>(timeout)), ORE_Timeout);
         }
         robots.clear();
         for (const KinBodyPtr& pbody : _vecbodies) {

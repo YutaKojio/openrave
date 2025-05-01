@@ -2902,15 +2902,33 @@ object PyEnvironmentBase::drawtrimesh(object opoints, object oindices, object oc
 
 object PyEnvironmentBase::GetBodies()
 {
-    std::vector<KinBodyPtr> vbodies;
-    _penv->GetBodies(vbodies);
-    py::list bodies;
-    FOREACHC(itbody, vbodies) {
-        if( (*itbody)->IsRobot() ) {
-            bodies.append(openravepy::toPyRobot(RaveInterfaceCast<RobotBase>(*itbody),shared_from_this()));
+    std::vector<KinBodyPtr> vBodies;
+    _penv->GetBodies(vBodies);
+    py::list bodies(vBodies.size()); // Preallocate
+    for (size_t bodyIndex = 0; bodyIndex < vBodies.size(); bodyIndex++) {
+        const KinBodyPtr& pBody = vBodies[bodyIndex];
+        if (pBody->IsRobot()) {
+            bodies[bodyIndex] = openravepy::toPyRobot(RaveInterfaceCast<RobotBase>(pBody), shared_from_this());
         }
         else {
-            bodies.append(openravepy::toPyKinBody(*itbody,shared_from_this()));
+            bodies[bodyIndex] = openravepy::toPyKinBody(pBody, shared_from_this());
+        }
+    }
+    return bodies;
+}
+
+object PyEnvironmentBase::GetBodiesWithReadableInterface(const std::string& readableInterfaceName)
+{
+    std::vector<KinBodyPtr> vBodies;
+    _penv->GetBodiesWithReadableInterface(vBodies, readableInterfaceName);
+    py::list bodies(vBodies.size()); // Preallocate
+    for (size_t bodyIndex = 0; bodyIndex < vBodies.size(); bodyIndex++) {
+        const KinBodyPtr& pBody = vBodies[bodyIndex];
+        if (pBody->IsRobot()) {
+            bodies[bodyIndex] = openravepy::toPyRobot(RaveInterfaceCast<RobotBase>(pBody), shared_from_this());
+        }
+        else {
+            bodies[bodyIndex] = openravepy::toPyKinBody(pBody, shared_from_this());
         }
     }
     return bodies;
@@ -4033,6 +4051,7 @@ Because race conditions can pop up when trying to lock the openrave environment 
 #endif
                      .def("GetRobots",&PyEnvironmentBase::GetRobots, DOXY_FN(EnvironmentBase,GetRobots))
                      .def("GetBodies",&PyEnvironmentBase::GetBodies, DOXY_FN(EnvironmentBase,GetBodies))
+                     .def("GetBodiesWithReadableInterface",&PyEnvironmentBase::GetBodiesWithReadableInterface, DOXY_FN(EnvironmentBase,GetBodiesWithReadableInterface))
                      .def("GetNumBodies",&PyEnvironmentBase::GetNumBodies, DOXY_FN(EnvironmentBase,GetNumBodies))
                      .def("GetSensors",&PyEnvironmentBase::GetSensors, DOXY_FN(EnvironmentBase,GetSensors))
                      .def("UpdatePublishedBodies",&PyEnvironmentBase::UpdatePublishedBodies, DOXY_FN(EnvironmentBase,UpdatePublishedBodies))
