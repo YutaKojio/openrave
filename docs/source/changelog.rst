@@ -3,10 +3,15 @@
 ChangeLog
 #########
 
+Version 0.165.1
+===============
+
+- Avoid N^2 loops in UpdateFromInfo.
+
 Version 0.165.0
 ===============
 
-- Replace `serialize` used for hashing with `DigestHsah`
+- Replace `serialize` used for hashing with `DigestHash`.
 
 Version 0.164.0
 ===============
