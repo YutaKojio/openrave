@@ -56,7 +56,7 @@ struct EnvironmentLoadContext
 
     /// Cached set of rapidjson documents that have been loaded, indexed by filename
     /// These documents are linked to the allocator that is part of this structure.
-    std::unordered_map<std::string, boost::shared_ptr<const rapidjson::Document>> rapidjsonDocumentsByFilename;
+    std::unordered_map<std::string, boost::shared_ptr<const rapidjson::Document>> rapidjsonDocuments;
 
     /// Preallocated region for JSON parsing
     std::array<uint8_t, JSON_ALLOCATOR_PREALLOC_BYTES> rapidjsonAllocatorBuffer;
