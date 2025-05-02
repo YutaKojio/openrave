@@ -49,11 +49,20 @@ enum InterfaceAddMode
 };
 
 /// \brief Cached context that can be passed to successive Load/LoadURI/ReadKinBodyURI calls to cache referenced objects across calls
-class EnvironmentLoadContext
+struct EnvironmentLoadContext
 {
-public:
+    /// How much space should be preallocated for our rapidjson objects
+    static const size_t JSON_ALLOCATOR_PREALLOC_BYTES = 64 * 1024;
+
     /// Cached set of rapidjson documents that have been loaded, indexed by filename
+    /// These documents are linked to the allocator that is part of this structure.
     std::unordered_map<std::string, boost::shared_ptr<const rapidjson::Document>> rapidjsonDocumentsByFilename;
+
+    /// Preallocated region for JSON parsing
+    std::array<uint8_t, JSON_ALLOCATOR_PREALLOC_BYTES> rapidjsonAllocatorBuffer;
+
+    /// Allocator for cached documents. Must not be cleared for the lifetime of the load context.
+    rapidjson::MemoryPoolAllocator<> rapidjsonAllocator{&rapidjsonAllocatorBuffer[0], JSON_ALLOCATOR_PREALLOC_BYTES};
 };
 using EnvironmentLoadContextPtr = boost::shared_ptr<EnvironmentLoadContext>;
 

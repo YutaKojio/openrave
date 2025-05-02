@@ -293,7 +293,7 @@ public:
                 }
             }
 
-            boost::shared_ptr<const rapidjson::Document> prReferenceEnvInfo = _GetDocumentFromFilename(fullFilename, alloc);
+            boost::shared_ptr<const rapidjson::Document> prReferenceEnvInfo = _GetDocumentFromFilename(fullFilename);
             if (!prReferenceEnvInfo || !prReferenceEnvInfo->IsObject() ) {
                 RAVELOG_WARN_FORMAT("env=%d, failed to load referenced body from filename '%s'", _penv->GetId()%fullFilename);
                 if (_bMustResolveURI) {
@@ -611,7 +611,7 @@ protected:
         return false;
     }
 
-    boost::shared_ptr<const rapidjson::Document> _GetDocumentFromFilename(const std::string& fullFilename, rapidjson::Document::AllocatorType& alloc)
+    boost::shared_ptr<const rapidjson::Document> _GetDocumentFromFilename(const std::string& fullFilename)
     {
         // TODO: optimize this. for the first time doc is cached, all the expandable object will never get cached, because we are not update document cache after expand any body
         decltype(_loadContext->rapidjsonDocumentsByFilename)::iterator documentIt = _loadContext->rapidjsonDocumentsByFilename.find(fullFilename);
@@ -622,19 +622,19 @@ protected:
         if (!IsDownloadingFromRemote()) {
             boost::shared_ptr<rapidjson::Document> newDoc;
             if (StringEndsWith(fullFilename, ".json")) {
-                newDoc.reset(new rapidjson::Document(&alloc));
+                newDoc.reset(new rapidjson::Document(&_loadContext->rapidjsonAllocator));
                 OpenRapidJsonDocument(fullFilename, *newDoc);
             }
             else if (StringEndsWith(fullFilename, ".msgpack")) {
-                newDoc.reset(new rapidjson::Document(&alloc));
+                newDoc.reset(new rapidjson::Document(&_loadContext->rapidjsonAllocator));
                 OpenMsgPackDocument(fullFilename, *newDoc);
             }
             else if (StringEndsWith(fullFilename, ".json.gpg")) {
-                newDoc.reset(new rapidjson::Document(&alloc));
+                newDoc.reset(new rapidjson::Document(&_loadContext->rapidjsonAllocator));
                 OpenEncryptedJSONDocument(fullFilename, *newDoc);
             }
             else if (StringEndsWith(fullFilename, ".msgpack.gpg")) {
-                newDoc.reset(new rapidjson::Document(&alloc));
+                newDoc.reset(new rapidjson::Document(&_loadContext->rapidjsonAllocator));
                 OpenEncryptedMsgPackDocument(fullFilename, *newDoc);
             }
             if (!!newDoc) {
@@ -795,7 +795,7 @@ protected:
 
             uint64_t beforeOpenStampUS = utils::GetMonotonicTime();
 
-            boost::shared_ptr<const rapidjson::Document> pReferenceScene = _GetDocumentFromFilename(fullFilename, alloc);
+            boost::shared_ptr<const rapidjson::Document> pReferenceScene = _GetDocumentFromFilename(fullFilename);
             if (!pReferenceScene || !pReferenceScene->IsObject() ) {
                 RAVELOG_ERROR_FORMAT("referenced document from file '%s' cannot be loaded.", fullFilename);
                 return -1;
