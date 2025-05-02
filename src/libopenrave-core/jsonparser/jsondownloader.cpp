@@ -76,7 +76,7 @@ JSONDownloadContext::~JSONDownloadContext()
     }
 }
 
-JSONDownloader::JSONDownloader(std::map<std::string, boost::shared_ptr<const rapidjson::Document> >& rapidJSONDocuments, const std::vector<std::string>& vOpenRAVESchemeAliases, const std::string& remoteUrl, const std::string& unixEndpoint) :
+JSONDownloader::JSONDownloader(std::unordered_map<std::string, boost::shared_ptr<const rapidjson::Document> >& rapidJSONDocuments, const std::vector<std::string>& vOpenRAVESchemeAliases, const std::string& remoteUrl, const std::string& unixEndpoint) :
     _rapidJSONDocuments(rapidJSONDocuments),
     _vOpenRAVESchemeAliases(vOpenRAVESchemeAliases),
     _remoteUrl(remoteUrl),
