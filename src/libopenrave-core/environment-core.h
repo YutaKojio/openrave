@@ -1655,7 +1655,7 @@ public:
         }
     }
 
-    virtual void GetBodiesWithReadableInterface(std::vector<KinBodyPtr>& bodies, const std::string& readableInterfaceName, uint64_t timeout) const override
+    void GetBodiesMatchingFilter(std::vector<KinBodyPtr>& bodies, const std::function<bool(const KinBody&)>& filterFunction, uint64_t timeout = 0) const override
     {
         TimedSharedLock _lockMutexInterfaces(_mutexInterfaces, timeout);
         if (!_lockMutexInterfaces) {
@@ -1667,7 +1667,7 @@ public:
             if (!pbody) {
                 continue;
             }
-            if (!pbody->HasReadableInterface(readableInterfaceName)) {
+            if (!filterFunction(*pbody)) {
                 continue;
             }
             bodies.push_back(pbody);
