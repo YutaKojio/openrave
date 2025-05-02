@@ -1657,8 +1657,8 @@ public:
 
     void GetBodiesMatchingFilter(std::vector<KinBodyPtr>& bodies, const std::function<bool(const KinBody&)>& filterFunction, uint64_t timeout = 0) const override
     {
-        TimedSharedLock _lockMutexInterfaces(_mutexInterfaces, timeout);
-        if (!_lockMutexInterfaces) {
+        TimedSharedLock lockInterfaces(_mutexInterfaces, timeout);
+        if (!lockInterfaces) {
             throw OPENRAVE_EXCEPTION_FORMAT(_("timeout of %f s failed"), (1e-6 * static_cast<double>(timeout)), ORE_Timeout);
         }
         bodies.clear();
