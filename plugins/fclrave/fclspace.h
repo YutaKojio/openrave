@@ -124,7 +124,7 @@ public:
             KinBody::LinkWeakPtr _plink;
             vector< boost::shared_ptr<FCLGeometryInfo> > vgeominfos; ///< info for every geometry of the link
 
-            //int nLastStamp; ///< Tracks if the collision geometries are up to date wrt the body update stamp. This is for narrow phase collision
+            int nLastStamp = 0; ///< Tracks if the collision geometries are up to date wrt the body update stamp. This is for narrow phase collision
             TranslationCollisionPair linkBV; ///< pair of the translation and collision object corresponding to a bounding OBB for the link
             std::vector<TransformCollisionPair> vgeoms; ///< vector of transformations and collision object; one per geometries
             std::string bodylinkname; // for debugging purposes
@@ -206,6 +206,10 @@ public:
 
     void SynchronizeWithAttached(const KinBody &body);
 
+    void SynchronizeExcluded(const KinBodyConstPtr& pbodyexcluded);
+
+    void SynchronizeLink(const KinBody::Link &link);
+
     FCLKinBodyInfoPtr& GetInfo(const KinBody &body);
 
     const FCLKinBodyInfoPtr& GetInfo(const KinBody &body) const;
@@ -261,6 +265,8 @@ private:
 
     // what about the tests on non-zero size (eg. box extents) ?
     CollisionGeometryPtr _CreateFCLGeomFromGeometryInfo(const KinBody::GeometryInfo &info);
+
+    void _SynchronizeLink(FCLKinBodyInfo& info, const KinBody& body, int linkIndex);
 
     /// \brief pass in info.GetBody() as a reference to avoid dereferencing the weak pointer in FCLKinBodyInfo
     void _Synchronize(FCLKinBodyInfo& info, const KinBody& body);
