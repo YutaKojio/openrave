@@ -64,7 +64,7 @@ public:
 
     /// \brief initializes the environment
     virtual void Init(bool bStartSimulationThread) = 0;
-            
+
     /// \brief Resets all objects of the scene (preserves all problems, planners). <b>[multi-thread safe]</b>
     ///
     /// Do not call inside a SimulationStep call
@@ -545,7 +545,7 @@ public:
 
     /// \brief Return the number of bodies currently in the environment. <b>[multi-thread safe]</b>
     virtual int GetNumBodies() const = 0;
-    
+
     /// \brief Query a sensor from its name. <b>[multi-thread safe]</b>
     /// \return first sensor that matches with name, note that sensors attached to robots have the robot name as a prefix.
     virtual SensorBasePtr GetSensor(const std::string& name) const =0;
@@ -561,6 +561,15 @@ public:
     /// \param timeout microseconds to wait before throwing an exception, if 0, will block indefinitely.
     /// \throw openrave_exception with ORE_Timeout error code
     virtual void GetBodies(std::vector<KinBodyPtr>& bodies, uint64_t timeout=0) const = 0;
+
+    /// \brief Get all bodies loaded in the environment (including robots) that match the specified filter function. <b>[multi-thread safe]</b>
+    ///
+    /// A separate **interface mutex** is locked for reading the bodies.
+    /// \param[out] bodies filled with all the bodies
+    /// \param filterFunction unary predicate that takes a reference to a KinBody and returns true if that body should be selected by the filter
+    /// \param timeout microseconds to wait before throwing an exception, if 0, will block indefinitely.
+    /// \throw openrave_exception with ORE_Timeout error code
+    virtual void GetBodiesMatchingFilter(std::vector<KinBodyPtr>& bodies, const std::function<bool(const KinBody&)>& filterFunction, uint64_t timeout = 0) const = 0;
 
     /// \brief Fill an array with all robots loaded in the environment. <b>[multi-thread safe]</b>
     ///
