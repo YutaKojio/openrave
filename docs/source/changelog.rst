@@ -3,10 +3,16 @@
 ChangeLog
 #########
 
-Version 0.165.1
+Version 0.166.1
 ===============
 
 - Avoid N^2 loops in UpdateFromInfo.
+
+Version 0.166.0
+===============
+
+- Ass support for `GetBodiesMatchingFilter`.
+- Allow fetching only bodies that have a certain readable.
 
 Version 0.165.0
 ===============
