@@ -611,10 +611,8 @@ public:
         // Is this document in cache?
         decltype(_loadContext->rapidjsonDocuments)::iterator documentIt = _loadContext->rapidjsonDocuments.find(resourceId);
         if (documentIt != _loadContext->rapidjsonDocuments.end()) {
-            RAVELOG_ERROR_FORMAT("cache hit for %s", resourceId);
             return documentIt->second;
         }
-        RAVELOG_ERROR_FORMAT("cache miss for %s", resourceId);
 
         // If not, attempt to load
         boost::shared_ptr<rapidjson::Document> newDoc = boost::make_shared<rapidjson::Document>(&_loadContext->rapidjsonAllocator);
