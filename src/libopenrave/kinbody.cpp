@@ -4197,7 +4197,7 @@ void KinBody::SetSelfCollisionChecker(CollisionCheckerBasePtr collisionchecker)
     }
 }
 
-CollisionCheckerBasePtr KinBody::GetSelfCollisionChecker() const
+const CollisionCheckerBasePtr& KinBody::GetSelfCollisionChecker() const
 {
     return _selfcollisionchecker;
 }
@@ -6067,6 +6067,7 @@ void KinBody::Clone(InterfaceBaseConstPtr preference, int cloningoptions)
 
     _lastModifiedAtUS = r->_lastModifiedAtUS;
     _revisionId = r->_revisionId;
+    _wasEverGrabbed = r->_wasEverGrabbed;
 
     _nUpdateStampId++; // update the stamp instead of copying
 }
@@ -6118,19 +6119,19 @@ void KinBody::Serialize(BaseXMLWriterPtr writer, int options) const
     InterfaceBase::Serialize(writer,options);
 }
 
-void KinBody::serialize(std::ostream& o, int options) const
+void KinBody::DigestHash(HashContext& hash, int options) const
 {
-    o << _veclinks.size() << " ";
+    hash << _veclinks.size();
     FOREACHC(it,_veclinks) {
-        (*it)->serialize(o,options);
+        (*it)->DigestHash(hash,options);
     }
-    o << _vecjoints.size() << " ";
+    hash << _vecjoints.size();
     FOREACHC(it,_vecjoints) {
-        (*it)->serialize(o,options);
+        (*it)->DigestHash(hash,options);
     }
-    o << _vPassiveJoints.size() << " ";
+    hash << _vPassiveJoints.size();
     FOREACHC(it,_vPassiveJoints) {
-        (*it)->serialize(o,options);
+        (*it)->DigestHash(hash,options);
     }
 }
 
@@ -6150,11 +6151,10 @@ const std::string& KinBody::GetKinematicsGeometryHash() const
 {
     CHECK_INTERNAL_COMPUTATION;
     if( __hashKinematicsGeometryDynamics.size() == 0 ) {
-        ostringstream ss;
-        ss << std::fixed << std::setprecision(SERIALIZATION_PRECISION);
+        HashContext hash;
         // should add dynamics since that affects a lot how part is treated.
-        serialize(ss,SO_Kinematics|SO_Geometry|SO_Dynamics);
-        __hashKinematicsGeometryDynamics = utils::GetMD5HashString(ss.str());
+        DigestHash(hash, SO_Kinematics|SO_Geometry|SO_Dynamics);
+        __hashKinematicsGeometryDynamics = hash.HexDigest();
     }
     return __hashKinematicsGeometryDynamics;
 }

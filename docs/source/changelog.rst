@@ -3,6 +3,11 @@
 ChangeLog
 #########
 
+Version 0.165.0
+===============
+
+- Replace `serialize` used for hashing with `DigestHsah`
+
 Version 0.164.0
 ===============
 

@@ -3004,7 +3004,7 @@ public:
         for(int inputBodyIndex = 0; inputBodyIndex < (int)info._vBodyInfos.size(); ++inputBodyIndex) {
             const KinBody::KinBodyInfoConstPtr& pKinBodyInfo = info._vBodyInfos[inputBodyIndex];
             const KinBody::KinBodyInfo& kinBodyInfo = *pKinBodyInfo;
-            RAVELOG_VERBOSE_FORMAT("env=%s, id '%s', name '%s'", GetNameId()%pKinBodyInfo->_id%pKinBodyInfo->_name);
+            RAVELOG_VERBOSE_FORMAT("env=%s, id '%s', name '%s', _vGrabbedInfos=%d", GetNameId()%pKinBodyInfo->_id%pKinBodyInfo->_name%pKinBodyInfo->_vGrabbedInfos.size());
             RobotBase::RobotBaseInfoConstPtr pRobotBaseInfo = OPENRAVE_DYNAMIC_POINTER_CAST<const RobotBase::RobotBaseInfo>(pKinBodyInfo);
             KinBodyPtr pMatchExistingBody; // matches to pKinBodyInfo
             int bodyIndex = -1; // index to vBodies to use. -1 if not used
@@ -3123,7 +3123,7 @@ public:
             if( !!pMatchExistingBody ) {
                 listBodiesTemporarilyRenamed.remove(pMatchExistingBody); // if targreted, then do not need to remove anymore
 
-                RAVELOG_VERBOSE_FORMAT("env=%s, update existing body id '%s'", GetNameId()%pMatchExistingBody->_id);
+                RAVELOG_VERBOSE_FORMAT("env=%s, update existing body id '%s', numGrabbed=%d", GetNameId()%pMatchExistingBody->_id%pMatchExistingBody->GetNumGrabbed());
                 // interface should match at this point
                 // update existing body or robot
                 UpdateFromInfoResult updateFromInfoResult = UFIR_NoChange;
@@ -3138,7 +3138,7 @@ public:
                 } else {
                     updateFromInfoResult = pMatchExistingBody->UpdateFromKinBodyInfo(*pKinBodyInfo);
                 }
-                RAVELOG_VERBOSE_FORMAT("env=%s, update body '%s' from info result %d", GetNameId() % pMatchExistingBody->_id % static_cast<int>(updateFromInfoResult));
+                RAVELOG_VERBOSE_FORMAT("env=%s, update body '%s' from info result %d, numGrabbed=%d", GetNameId() % pMatchExistingBody->_id % static_cast<int>(updateFromInfoResult)%pMatchExistingBody->GetNumGrabbed());
                 if (updateFromInfoResult == UFIR_NoChange) {
                     continue;
                 }
@@ -3540,25 +3540,34 @@ protected:
             }
         }
 
+        // Ensure that this body isn't grabbing anything else
         body.ReleaseAllGrabbed();
-        if( !!_pCurrentChecker ) {
+
+        // If there is a collision checker on the current environment, ensure that we unregister this body
+        if (!!_pCurrentChecker) {
             _pCurrentChecker->RemoveKinBody(pbodyref);
         }
-        {
-            CollisionCheckerBasePtr pSelfColChecker = body.GetSelfCollisionChecker();
-            if (!!pSelfColChecker && pSelfColChecker != _pCurrentChecker) {
-                pSelfColChecker->RemoveKinBody(pbodyref);
-            }
+
+        // If the body has a self-collision checker that differs from the env checker, need to remove from that as well
+        const CollisionCheckerBasePtr& pSelfColChecker = body.GetSelfCollisionChecker();
+        if (!!pSelfColChecker && pSelfColChecker != _pCurrentChecker) {
+            pSelfColChecker->RemoveKinBody(pbodyref);
         }
-        // remove from self collision checker of other bodies since it may have been grabbed.
-        for (KinBodyPtr& potherbody : _vecbodies) {
-            if( !!potherbody && pbodyref != potherbody ) {
-                CollisionCheckerBasePtr pOtherSelfColChecker = potherbody->GetSelfCollisionChecker();
-                if( !!pOtherSelfColChecker && pOtherSelfColChecker != _pCurrentChecker ) {
-                    pOtherSelfColChecker->RemoveKinBody(pbodyref); // should be okay to call RemoveKinBody even when the pbodyref has not been aeed to the pOtherSelfColChecker
+
+        // If this body has ever been grabbed, then it's possible that it exists in the collision checker of whatever body grabbed it.
+        // Check all the other bodies in the env to see if they have custom self collision checkers, and if they do, make sure we remove this body
+        // This is expensive if the environment contains a lot of bodies, hence why we only do this scan if the body has at one point been grabbed.
+        if (body._wasEverGrabbed) {
+            for (KinBodyPtr& potherbody : _vecbodies) {
+                if (!!potherbody && pbodyref != potherbody) {
+                    const CollisionCheckerBasePtr& pOtherSelfColChecker = potherbody->GetSelfCollisionChecker();
+                    if (!!pOtherSelfColChecker && pOtherSelfColChecker != _pCurrentChecker) {
+                        pOtherSelfColChecker->RemoveKinBody(pbodyref); // should be okay to call RemoveKinBody even when the pbodyref has not been added to the pOtherSelfColChecker
+                    }
                 }
             }
         }
+
         if( !!_pPhysicsEngine ) {
             _pPhysicsEngine->RemoveKinBody(pbodyref);
         }
