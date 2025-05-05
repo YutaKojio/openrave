@@ -108,16 +108,21 @@ static void OpenDocumentFromFilename(const std::string& fullFilename, rapidjson:
 {
     if (StringEndsWith(fullFilename, ".json")) {
         OpenRapidJsonDocument(fullFilename, doc);
+        return;
     }
     else if (StringEndsWith(fullFilename, ".msgpack")) {
         OpenMsgPackDocument(fullFilename, doc);
+        return;
     }
     else if (StringEndsWith(fullFilename, ".json.gpg")) {
         OpenEncryptedJSONDocument(fullFilename, doc);
+        return;
     }
     else if (StringEndsWith(fullFilename, ".msgpack.gpg")) {
         OpenEncryptedMsgPackDocument(fullFilename, doc);
+        return;
     }
+
     throw OPENRAVE_EXCEPTION_FORMAT("unknown filetype '%s'", fullFilename, ORE_InvalidURI);
 }
 
