@@ -324,6 +324,7 @@ public:
     object drawtrimesh(object opoints, object oindices=py::none_(), object ocolors=py::none_());
 
     object GetBodies();
+    object GetBodiesWithReadableInterface(const std::string& readableInterfaceName);
     int GetNumBodies();
 
     object GetRobots();

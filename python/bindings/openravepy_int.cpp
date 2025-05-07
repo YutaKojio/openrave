@@ -75,9 +75,10 @@ py::object toPyObject(const rapidjson::Value& value)
     }
     case rapidjson::kArrayType:
     {
-        py::list l;
+        py::list l(value.Size());
+        size_t writeIndex = 0;
         for (rapidjson::Value::ConstValueIterator it = value.Begin(); it != value.End(); ++it) {
-            l.append(toPyObject(*it));
+            l[writeIndex++] = toPyObject(*it);
         }
         return l;
     }
@@ -2900,20 +2901,33 @@ object PyEnvironmentBase::drawtrimesh(object opoints, object oindices, object oc
     return toPyGraphHandle(_penv->drawtrimesh(vpoints.data(),sizeof(float)*3,pindices,numTriangles,RaveVector<float>(1,0.5,0.5,1)));
 }
 
-object PyEnvironmentBase::GetBodies()
+static object _KinbodyVectorToPyArray(const std::vector<KinBodyPtr>& vBodies, const boost::shared_ptr<PyEnvironmentBase>& sharedEnvironmentThis)
 {
-    std::vector<KinBodyPtr> vbodies;
-    _penv->GetBodies(vbodies);
-    py::list bodies;
-    FOREACHC(itbody, vbodies) {
-        if( (*itbody)->IsRobot() ) {
-            bodies.append(openravepy::toPyRobot(RaveInterfaceCast<RobotBase>(*itbody),shared_from_this()));
+    py::list bodies(vBodies.size()); // Preallocate
+    for (size_t bodyIndex = 0; bodyIndex < vBodies.size(); bodyIndex++) {
+        const KinBodyPtr& pBody = vBodies[bodyIndex];
+        if (pBody->IsRobot()) {
+            bodies[bodyIndex] = openravepy::toPyRobot(RaveInterfaceCast<RobotBase>(pBody), sharedEnvironmentThis);
         }
         else {
-            bodies.append(openravepy::toPyKinBody(*itbody,shared_from_this()));
+            bodies[bodyIndex] = openravepy::toPyKinBody(pBody, sharedEnvironmentThis);
         }
     }
     return bodies;
+}
+
+object PyEnvironmentBase::GetBodies()
+{
+    std::vector<KinBodyPtr> vBodies;
+    _penv->GetBodies(vBodies);
+    return _KinbodyVectorToPyArray(vBodies, shared_from_this());
+}
+
+object PyEnvironmentBase::GetBodiesWithReadableInterface(const std::string& readableInterfaceName)
+{
+    std::vector<KinBodyPtr> vBodies;
+    _penv->GetBodiesMatchingFilter(vBodies, std::bind(&KinBody::HasReadableInterface, std::placeholders::_1, std::ref(readableInterfaceName)));
+    return _KinbodyVectorToPyArray(vBodies, shared_from_this());
 }
 
 int PyEnvironmentBase::GetNumBodies()
@@ -4033,6 +4047,7 @@ Because race conditions can pop up when trying to lock the openrave environment 
 #endif
                      .def("GetRobots",&PyEnvironmentBase::GetRobots, DOXY_FN(EnvironmentBase,GetRobots))
                      .def("GetBodies",&PyEnvironmentBase::GetBodies, DOXY_FN(EnvironmentBase,GetBodies))
+                     .def("GetBodiesWithReadableInterface",&PyEnvironmentBase::GetBodiesWithReadableInterface, "Fetch fetch all bodies that have the given readable interface present")
                      .def("GetNumBodies",&PyEnvironmentBase::GetNumBodies, DOXY_FN(EnvironmentBase,GetNumBodies))
                      .def("GetSensors",&PyEnvironmentBase::GetSensors, DOXY_FN(EnvironmentBase,GetSensors))
                      .def("UpdatePublishedBodies",&PyEnvironmentBase::UpdatePublishedBodies, DOXY_FN(EnvironmentBase,UpdatePublishedBodies))
