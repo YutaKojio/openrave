@@ -3,10 +3,15 @@
 ChangeLog
 #########
 
-Version 0.166.1
+Version 0.166.2
 ===============
 
 - Avoid N^2 loops in UpdateFromInfo.
+
+Version 0.166.1
+===============
+
+- Add missing enum to `PlannerStatusCode` python binding
 
 Version 0.166.0
 ===============
