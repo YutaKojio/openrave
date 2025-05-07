@@ -3,6 +3,10 @@
 ChangeLog
 #########
 
+Version 0.166.1
+===============
+- Add missing enum to `PlannerStatusCode` python binding
+
 Version 0.166.0
 ===============
 
