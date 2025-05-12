@@ -3,6 +3,11 @@
 ChangeLog
 #########
 
+Version 0.167.0
+===============
+
+- Optimize link checkCollision not to synchronize unnecessary links.
+
 Version 0.166.1
 ===============
 - Add missing enum to `PlannerStatusCode` python binding
