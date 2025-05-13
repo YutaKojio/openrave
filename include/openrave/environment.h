@@ -265,7 +265,7 @@ public:
     typedef SelectionOptions TriangulateOptions;
 
     /// \brief creates a load context for this environmnet used to cache common filesystem load operations
-    EnvironmentLoadContextPtr CreateEnvironmentLoadContext();
+    EnvironmentLoadContextPtr CreateEnvironmentLoadContext() = 0;
 
     /** \brief Loads a scene from a file and adds all objects in the environment. <b>[multi-thread safe]</b>
 
