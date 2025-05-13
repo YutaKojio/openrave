@@ -3058,16 +3058,16 @@ public:
             KinBodyPtr pMatchExistingBody; // Will be loaded with the existing body to update, if any
             do {
                 // Check if we have bodies with matching names / ids
-                const std::unordered_map<string_view, KinBodyPtr>::iterator itExistingBodyIndexById = mapExistingBodiesById.find(kinBodyInfo._id);
-                const std::unordered_map<string_view, KinBodyPtr>::iterator itExistingBodyIndexByName = mapExistingBodiesByName.find(kinBodyInfo._name);
+                const std::unordered_map<string_view, KinBodyPtr>::iterator itExistingBodyById = mapExistingBodiesById.find(kinBodyInfo._id);
+                const std::unordered_map<string_view, KinBodyPtr>::iterator itExistingBodyByName = mapExistingBodiesByName.find(kinBodyInfo._name);
 
                 // Get the corresponding indexes into vBodies, or -1 if there was no match
                 KinBodyPtr pMatchExistingBodySameId, pMatchExistingBodySameName;
-                if( itExistingBodyIndexById != mapExistingBodiesById.end() ) {
-                    pMatchExistingBodySameId = std::move(itExistingBodyIndexById->second);
+                if( itExistingBodyById != mapExistingBodiesById.end() ) {
+                    pMatchExistingBodySameId = std::move(itExistingBodyById->second);
                 }
-                if( itExistingBodyIndexByName != mapExistingBodiesByName.end() ) {
-                    pMatchExistingBodySameName = std::move(itExistingBodyIndexByName->second);
+                if( itExistingBodyByName != mapExistingBodiesByName.end() ) {
+                    pMatchExistingBodySameName = std::move(itExistingBodyByName->second);
                 }
 
                 // Pick the best existing body index based on our resolution order
@@ -3100,13 +3100,12 @@ public:
                 // If we matched by ID instead of name, it's possible there exists another body in the env with the same name as our body info.
                 // This would cause a conflict if we try and update our current (id matched body) to have the same name.
                 // Since the other body with the same name might get processed again later (by id?), temporarily rename it so that we can continue.
-                if (!!pMatchExistingBody && pMatchExistingBody != pMatchExistingBodySameName && !!pMatchExistingBodySameName ) {
+                if (!!pMatchExistingBodySameName && pMatchExistingBody != pMatchExistingBodySameName ) {
                     RAVELOG_DEBUG_FORMAT("env=%s, have to clear body name '%s' id=%s for loading body with id=%s", GetNameId() % pMatchExistingBodySameName->GetName() % pMatchExistingBodySameName->GetId() % pMatchExistingBody->GetId());
 
                     // Since we are renaming a body, and our existing body indices map uses string views over our body names, need to make sure we remove this body's entry / add it back after rename
 
-                    //mapExistingBodiesByName.erase(itExistingBodyIndexByName); // is itExistingBodyIndexByName still valid?
-                    mapExistingBodiesByName.erase(pMatchExistingBodySameName->GetName());
+                    mapExistingBodiesByName.erase(itExistingBodyByName); // assuming itExistingBodyByName is still valid since it has a different name
                     pMatchExistingBodySameName->SetName(_GetUniqueName(pMatchExistingBodySameName->GetName() + "_tempRenamedDueToConflict_"));
                     mapExistingBodiesByName.emplace(pMatchExistingBodySameName->GetName(), pMatchExistingBodySameName);
                     listBodiesTemporarilyRenamed.push_back(pMatchExistingBodySameName);
