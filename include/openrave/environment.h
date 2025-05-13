@@ -49,20 +49,14 @@ enum InterfaceAddMode
 };
 
 /// \brief Cached context that can be passed to successive Load/LoadURI/ReadKinBodyURI calls to cache referenced objects across calls
-struct EnvironmentLoadContext
+class EnvironmentLoadContext
 {
-    /// How much space should be preallocated for our rapidjson objects
-    static const size_t JSON_ALLOCATOR_PREALLOC_BYTES = 64 * 1024;
+public:
+    virtual ~EnvironmentLoadContext() {
+    }
 
-    /// Cached set of rapidjson documents that have been loaded, indexed by filename
-    /// These documents are linked to the allocator that is part of this structure.
-    std::unordered_map<std::string, boost::shared_ptr<const rapidjson::Document>> rapidjsonDocuments;
-
-    /// Preallocated region for JSON parsing
-    std::array<uint8_t, JSON_ALLOCATOR_PREALLOC_BYTES> rapidjsonAllocatorBuffer;
-
-    /// Allocator for cached documents. Must not be cleared for the lifetime of the load context.
-    rapidjson::MemoryPoolAllocator<> rapidjsonAllocator{&rapidjsonAllocatorBuffer[0], JSON_ALLOCATOR_PREALLOC_BYTES};
+    /// \brief resets any type of cached data
+    virtual void Reset() = 0;
 };
 using EnvironmentLoadContextPtr = boost::shared_ptr<EnvironmentLoadContext>;
 
@@ -269,6 +263,9 @@ public:
         TO_AllExceptBody = 5,
     };
     typedef SelectionOptions TriangulateOptions;
+
+    /// \brief creates a load context for this environmnet used to cache common filesystem load operations
+    EnvironmentLoadContextPtr CreateEnvironmentLoadContext();
 
     /** \brief Loads a scene from a file and adds all objects in the environment. <b>[multi-thread safe]</b>
 

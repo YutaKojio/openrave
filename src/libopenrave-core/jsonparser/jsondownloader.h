@@ -47,11 +47,11 @@ typedef boost::shared_ptr<JSONDownloadContext> JSONDownloadContextPtr;
 /// \brief Downloader to download one or multiple uris and their references, used by JSONDownloaderScope to share keep-alive connections and other resources
 class JSONDownloader {
 public:
-    JSONDownloader(EnvironmentLoadContext& loadContext, const std::vector<std::string>& vOpenRAVESchemeAliases, const std::string& remoteUrl, const std::string& unixEndpoint);
+    JSONDownloader(EnvironmentLoadContextJSON& loadContext, const std::vector<std::string>& vOpenRAVESchemeAliases, const std::string& remoteUrl, const std::string& unixEndpoint);
     ~JSONDownloader();
 
 protected:
-    EnvironmentLoadContext& _loadContext; ///< cache for opened rapidjson Documents, newly downloaded documents will be inserted here, passed in via constructor
+    EnvironmentLoadContextJSON& _loadContext; ///< cache for opened rapidjson Documents, newly downloaded documents will be inserted here, passed in via constructor
     const std::vector<std::string>& _vOpenRAVESchemeAliases; ///< list of scheme aliases, passed in via constructor
     const std::string _remoteUrl; ///< remote url for scheme, passed in via constructor
     const std::string _unixEndpoint; ///< unix endpoint for establishing unix domain socket instead of tcp socket

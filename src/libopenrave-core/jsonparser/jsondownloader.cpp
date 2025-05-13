@@ -76,7 +76,7 @@ JSONDownloadContext::~JSONDownloadContext()
     }
 }
 
-JSONDownloader::JSONDownloader(EnvironmentLoadContext& loadContext, const std::vector<std::string>& vOpenRAVESchemeAliases, const std::string& remoteUrl, const std::string& unixEndpoint) :
+JSONDownloader::JSONDownloader(EnvironmentLoadContextJSON& loadContext, const std::vector<std::string>& vOpenRAVESchemeAliases, const std::string& remoteUrl, const std::string& unixEndpoint) :
     _loadContext(loadContext),
     _vOpenRAVESchemeAliases(vOpenRAVESchemeAliases),
     _remoteUrl(remoteUrl),
