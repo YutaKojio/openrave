@@ -3023,8 +3023,8 @@ public:
         // When trying to identify candidate matches, we can do two hash lookups instead of a sequential scan.
         // If we match a body out of vBodies, then we just need to remove the id/name maps that linked to it and reset the body at that location.
         // These maps use string_views over the bodies in vBodies; these bodies _are_ removed during iteration; care must be taken to erase the matching entries.
-        std::unordered_map<string_view, KinBodyPtr> mapExistingBodyIndicesById; // Map of body id -> environmentBodyIndex into vBodies
-        std::unordered_map<string_view, KinBodyPtr> mapExistingBodyIndicesByName; // Map of body name -> environmentBodyIndex into vBodies
+        std::unordered_map<string_view, KinBodyPtr> mapExistingBodiesById; // Map of body id -> environmentBodyIndex into vBodies
+        std::unordered_map<string_view, KinBodyPtr> mapExistingBodiesByName; // Map of body name -> environmentBodyIndex into vBodies
 
         {
             SharedLock lock533(_mutexInterfaces);
@@ -3038,8 +3038,8 @@ public:
                 if (bodyIdsToUpdate.find(body.GetId()) == bodyIdsToUpdate.end() && bodyNamesToUpdate.find(body.GetName()) == bodyNamesToUpdate.end()) {
                     continue;
                 }
-                mapExistingBodyIndicesById[body.GetId()] = _vecbodies[bodyIndex];
-                mapExistingBodyIndicesByName[body.GetName()] = _vecbodies[bodyIndex];
+                mapExistingBodiesById[body.GetId()] = _vecbodies[bodyIndex];
+                mapExistingBodiesByName[body.GetName()] = _vecbodies[bodyIndex];
             }
         }
 
@@ -3058,15 +3058,15 @@ public:
             KinBodyPtr pMatchExistingBody; // Will be loaded with the existing body to update, if any
             do {
                 // Check if we have bodies with matching names / ids
-                const std::unordered_map<string_view, KinBodyPtr>::iterator itExistingBodyIndexById = mapExistingBodyIndicesById.find(kinBodyInfo._id);
-                const std::unordered_map<string_view, KinBodyPtr>::iterator itExistingBodyIndexByName = mapExistingBodyIndicesByName.find(kinBodyInfo._name);
+                const std::unordered_map<string_view, KinBodyPtr>::iterator itExistingBodyIndexById = mapExistingBodiesById.find(kinBodyInfo._id);
+                const std::unordered_map<string_view, KinBodyPtr>::iterator itExistingBodyIndexByName = mapExistingBodiesByName.find(kinBodyInfo._name);
 
                 // Get the corresponding indexes into vBodies, or -1 if there was no match
                 KinBodyPtr pMatchExistingBodySameId, pMatchExistingBodySameName;
-                if( itExistingBodyIndexById != mapExistingBodyIndicesByName.end() ) {
+                if( itExistingBodyIndexById != mapExistingBodiesById.end() ) {
                     pMatchExistingBodySameId = std::move(itExistingBodyIndexById->second);
                 }
-                if( itExistingBodyIndexByName != mapExistingBodyIndicesByName.end() ) {
+                if( itExistingBodyIndexByName != mapExistingBodiesByName.end() ) {
                     pMatchExistingBodySameName = std::move(itExistingBodyIndexByName->second);
                 }
 
@@ -3080,8 +3080,8 @@ public:
 
                 // If we matched a body to reuse, latch it out and clear the mappings so that we can't double-process it
                 // TODO can be more optimal
-                mapExistingBodyIndicesById.erase(pMatchExistingBody->GetId()); // Also ensures no dangling string_views in the event this body gets destroyed later in the loop
-                mapExistingBodyIndicesByName.erase(pMatchExistingBody->GetName());
+                mapExistingBodiesById.erase(pMatchExistingBody->GetId()); // Also ensures no dangling string_views in the event this body gets destroyed later in the loop
+                mapExistingBodiesByName.erase(pMatchExistingBody->GetName());
 
                 // If we matched an existing body, but that body is of a different interface to the info (e.g robot vs plain body), then we can't just update, need to recreate it.
                 bool bInterfaceMatches = pMatchExistingBody->GetXMLId() == pKinBodyInfo->_interfaceType;
@@ -3100,15 +3100,15 @@ public:
                 // If we matched by ID instead of name, it's possible there exists another body in the env with the same name as our body info.
                 // This would cause a conflict if we try and update our current (id matched body) to have the same name.
                 // Since the other body with the same name might get processed again later (by id?), temporarily rename it so that we can continue.
-                if (!!pMatchExistingBody && pMatchExistingBody != pMatchExistingBodySameName && !!pExistingIndexSameName ) {
+                if (!!pMatchExistingBody && pMatchExistingBody != pMatchExistingBodySameName && !!pMatchExistingBodySameName ) {
                     RAVELOG_DEBUG_FORMAT("env=%s, have to clear body name '%s' id=%s for loading body with id=%s", GetNameId() % pMatchExistingBodySameName->GetName() % pMatchExistingBodySameName->GetId() % pMatchExistingBody->GetId());
 
                     // Since we are renaming a body, and our existing body indices map uses string views over our body names, need to make sure we remove this body's entry / add it back after rename
 
-                    //mapExistingBodyIndicesByName.erase(itExistingBodyIndexByName); // is itExistingBodyIndexByName still valid?
-                    mapExistingBodyIndicesByName.erase(pMatchExistingBodySameName->GetName());
+                    //mapExistingBodiesByName.erase(itExistingBodyIndexByName); // is itExistingBodyIndexByName still valid?
+                    mapExistingBodiesByName.erase(pMatchExistingBodySameName->GetName());
                     pMatchExistingBodySameName->SetName(_GetUniqueName(pMatchExistingBodySameName->GetName() + "_tempRenamedDueToConflict_"));
-                    mapExistingBodyIndicesByName.emplace(pMatchExistingBodySameName->GetName(), pMatchExistingBodySameName);
+                    mapExistingBodiesByName.emplace(pMatchExistingBodySameName->GetName(), pMatchExistingBodySameName);
                     listBodiesTemporarilyRenamed.push_back(pMatchExistingBodySameName);
                 }
             } while (0);
