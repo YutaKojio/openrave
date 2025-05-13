@@ -47,11 +47,11 @@ typedef boost::shared_ptr<JSONDownloadContext> JSONDownloadContextPtr;
 /// \brief Downloader to download one or multiple uris and their references, used by JSONDownloaderScope to share keep-alive connections and other resources
 class JSONDownloader {
 public:
-    JSONDownloader(std::map<std::string, boost::shared_ptr<const rapidjson::Document> >& rapidJSONDocuments, const std::vector<std::string>& vOpenRAVESchemeAliases, const std::string& remoteUrl, const std::string& unixEndpoint);
+    JSONDownloader(EnvironmentLoadContextJSON& loadContext, const std::vector<std::string>& vOpenRAVESchemeAliases, const std::string& remoteUrl, const std::string& unixEndpoint);
     ~JSONDownloader();
 
 protected:
-    std::map<std::string, boost::shared_ptr<const rapidjson::Document> >& _rapidJSONDocuments; ///< cache for opened rapidjson Documents, newly downloaded documents will be inserted here, passed in via constructor
+    EnvironmentLoadContextJSON& _loadContext; ///< cache for opened rapidjson Documents, newly downloaded documents will be inserted here, passed in via constructor
     const std::vector<std::string>& _vOpenRAVESchemeAliases; ///< list of scheme aliases, passed in via constructor
     const std::string _remoteUrl; ///< remote url for scheme, passed in via constructor
     const std::string _unixEndpoint; ///< unix endpoint for establishing unix domain socket instead of tcp socket
@@ -93,7 +93,7 @@ public:
     /// \param timeoutUS timeout in microseconds to wait for download to finish
     bool WaitForDownloads(bool bMustResolveURI, uint64_t timeoutUS);
 
-protected: 
+protected:
 
     /// \brief Queue uri to be downloaded, optionally supply a rapidjson document to be used to store result
     void _QueueDownloadURI(const char* pUri, rapidjson::Document* pDoc);
