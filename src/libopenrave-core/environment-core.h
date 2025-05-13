@@ -3083,8 +3083,8 @@ public:
                 mapExistingBodiesById.erase(pMatchExistingBody->GetId()); // Also ensures no dangling string_views in the event this body gets destroyed later in the loop
                 mapExistingBodiesByName.erase(pMatchExistingBody->GetName());
 
-                bool bNameMatches = pMatchExistingBody == pMatchExistingBodySameName;
-                if( bNameMatches ) {
+                bool bNameMatchesForDifferentBody = !!pMatchExistingBodySameName && pMatchExistingBody != pMatchExistingBodySameName;
+                if( bNameMatchesForDifferentBody ) {
                     RAVELOG_DEBUG_FORMAT("env=%s, have to clear body name '%s' id=%s for loading body with id=%s", GetNameId() % pMatchExistingBodySameName->GetName() % pMatchExistingBodySameName->GetId() % pMatchExistingBody->GetId());
                 }
 
@@ -3105,7 +3105,7 @@ public:
                 // If we matched by ID instead of name, it's possible there exists another body in the env with the same name as our body info.
                 // This would cause a conflict if we try and update our current (id matched body) to have the same name.
                 // Since the other body with the same name might get processed again later (by id?), temporarily rename it so that we can continue.
-                if ( bNameMatches ) {
+                if ( bNameMatchesForDifferentBody ) {
                     // Since we are renaming a body, and our existing body indices map uses string views over our body names, need to make sure we remove this body's entry / add it back after rename
                     mapExistingBodiesByName.erase(itExistingBodyByName); // assuming itExistingBodyByName is still valid since it has a different name
                     pMatchExistingBodySameName->SetName(_GetUniqueName(pMatchExistingBodySameName->GetName() + "_tempRenamedDueToConflict_"));
