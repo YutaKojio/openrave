@@ -413,11 +413,7 @@ void FCLSpace::SynchronizeLink(const KinBody::Link &link)
     if( !pinfo ) {
         return;
     }
-    if( pinfo->nLastStamp != body.GetUpdateStamp() ) {
-        // do not update info->nLastStamp
-        // since other links are not updated
-        _SynchronizeLink(*pinfo, body, link.GetIndex());
-    }
+    _SynchronizeLink(*pinfo, body, link.GetIndex());
 }
 
 FCLSpace::FCLKinBodyInfoPtr& FCLSpace::GetInfo(const KinBody &body)
