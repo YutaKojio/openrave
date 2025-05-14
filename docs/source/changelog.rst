@@ -3,10 +3,15 @@
 ChangeLog
 #########
 
-Version 0.166.2
+Version 0.167.1
 ===============
 
 - Avoid N^2 loops in UpdateFromInfo.
+
+Version 0.167.0
+===============
+
+- Add `EnvironmentLoadContext` to the environment Load/Read methods to allow previously loaded files to be re-used, hence speeding up the load.
 
 Version 0.166.1
 ===============

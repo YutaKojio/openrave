@@ -590,7 +590,7 @@ public:
         }
     }
 
-    bool LoadURI(const std::string& uri, const AttributesList& atts) override
+    bool LoadURI(const std::string& uri, const AttributesList& atts, const EnvironmentLoadContextPtr& pLoadContext) override
     {
         std::string path;
         if (!_IsURI(uri, path)) {
@@ -602,19 +602,19 @@ public:
         }
         else if (_IsJSONFile(path)) {
             _ClearRapidJsonBuffer();
-            return RaveParseJSONURI(shared_from_this(), uri, UFIM_Exact, atts, *_prLoadEnvAlloc);
+            return RaveParseJSONURI(shared_from_this(), uri, UFIM_Exact, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext));
         }
         else if (_IsMsgPackFile(path)) {
             _ClearRapidJsonBuffer();
-            return RaveParseMsgPackURI(shared_from_this(), uri, UFIM_Exact, atts, *_prLoadEnvAlloc);
+            return RaveParseMsgPackURI(shared_from_this(), uri, UFIM_Exact, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext));
         }
         else if (StringEndsWith(path, ".json.gpg")) {
             _ClearRapidJsonBuffer();
-            return RaveParseEncryptedJSONURI(shared_from_this(), uri, UFIM_Exact, atts, *_prLoadEnvAlloc);
+            return RaveParseEncryptedJSONURI(shared_from_this(), uri, UFIM_Exact, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext));
         }
         else if (StringEndsWith(path, ".msgpack.gpg")) {
             _ClearRapidJsonBuffer();
-            return RaveParseEncryptedMsgPackURI(shared_from_this(), uri, UFIM_Exact, atts, *_prLoadEnvAlloc);
+            return RaveParseEncryptedMsgPackURI(shared_from_this(), uri, UFIM_Exact, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext));
         }
         else {
             RAVELOG_WARN_FORMAT("load failed on uri '%s' since could not determine the file type", uri);
@@ -622,7 +622,11 @@ public:
         return false;
     }
 
-    virtual bool Load(const std::string& filename, const AttributesList& atts) override
+    EnvironmentLoadContextPtr CreateEnvironmentLoadContext() {
+        return EnvironmentLoadContextPtr(new EnvironmentLoadContextJSON());
+    }
+
+    bool Load(const std::string& filename, const AttributesList& atts, const EnvironmentLoadContextPtr& pLoadContext) override
     {
         EnvironmentLock lockenv(GetMutex());
         OpenRAVEXMLParser::GetXMLErrorCount() = 0;
@@ -643,25 +647,25 @@ public:
         }
         else if( _IsJSONFile(filename) ) {
             _ClearRapidJsonBuffer();
-            if( RaveParseJSONFile(shared_from_this(), filename, UFIM_Exact, atts, *_prLoadEnvAlloc) ) {
+            if( RaveParseJSONFile(shared_from_this(), filename, UFIM_Exact, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return true;
             }
         }
         else if( _IsMsgPackFile(filename) ) {
             _ClearRapidJsonBuffer();
-            if( RaveParseMsgPackFile(shared_from_this(), filename, UFIM_Exact, atts, *_prLoadEnvAlloc) ) {
+            if( RaveParseMsgPackFile(shared_from_this(), filename, UFIM_Exact, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return true;
             }
         }
         else if (StringEndsWith(filename, ".json.gpg")) {
             _ClearRapidJsonBuffer();
-            if( RaveParseEncryptedJSONFile(shared_from_this(), filename, UFIM_Exact, atts, *_prLoadEnvAlloc) ) {
+            if( RaveParseEncryptedJSONFile(shared_from_this(), filename, UFIM_Exact, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return true;
             }
         }
         else if (StringEndsWith(filename, ".msgpack.gpg")) {
             _ClearRapidJsonBuffer();
-            if( RaveParseEncryptedMsgPackFile(shared_from_this(), filename, UFIM_Exact, atts, *_prLoadEnvAlloc) ) {
+            if( RaveParseEncryptedMsgPackFile(shared_from_this(), filename, UFIM_Exact, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return true;
             }
         }
@@ -674,7 +678,7 @@ public:
             }
         }
         else if( !_IsOpenRAVEFile(filename) && _IsRigidModelFile(filename) ) {
-            KinBodyPtr pbody = ReadKinBodyURI(KinBodyPtr(),filename,atts);
+            KinBodyPtr pbody = ReadKinBodyURI(KinBodyPtr(), filename, atts, pLoadContext);
             if( !!pbody ) {
                 _AddKinBody(pbody,IAM_AllowRenaming);
                 UpdatePublishedBodies();
@@ -694,7 +698,7 @@ public:
         return false;
     }
 
-    virtual bool LoadData(const std::string& data, const AttributesList& atts, const std::string& uri)
+    bool LoadData(const std::string& data, const AttributesList& atts, const std::string& uri, const EnvironmentLoadContextPtr& pLoadContext) override
     {
         EnvironmentLock lockenv(GetMutex());
         if( _IsColladaData(data) ) {
@@ -702,20 +706,20 @@ public:
         }
         if( _IsJSONData(data) ) {
             _ClearRapidJsonBuffer();
-            return RaveParseJSONData(shared_from_this(), uri, data, UFIM_Exact, atts, *_prLoadEnvAlloc);
+            return RaveParseJSONData(shared_from_this(), uri, data, UFIM_Exact, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext));
         }
         if( _IsMsgPackData(data) ) {
             _ClearRapidJsonBuffer();
-            return RaveParseMsgPackData(shared_from_this(), uri, data, UFIM_Exact, atts, *_prLoadEnvAlloc);
+            return RaveParseMsgPackData(shared_from_this(), uri, data, UFIM_Exact, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext));
         }
         return _ParseXMLData(OpenRAVEXMLParser::CreateEnvironmentReader(shared_from_this(),atts),data);
     }
 
-    bool LoadJSON(const rapidjson::Value& rEnvInfo, UpdateFromInfoMode updateMode, std::vector<KinBodyPtr>& vCreatedBodies, std::vector<KinBodyPtr>& vModifiedBodies, std::vector<KinBodyPtr>& vRemovedBodies, const AttributesList& atts, const std::string &uri) override
+    bool LoadJSON(const rapidjson::Value& rEnvInfo, UpdateFromInfoMode updateMode, std::vector<KinBodyPtr>& vCreatedBodies, std::vector<KinBodyPtr>& vModifiedBodies, std::vector<KinBodyPtr>& vRemovedBodies, const AttributesList& atts, const std::string& uri, const EnvironmentLoadContextPtr& pLoadContext) override
     {
         EnvironmentLock lockenv(GetMutex());
         _ClearRapidJsonBuffer();
-        return RaveParseJSON(shared_from_this(), uri, rEnvInfo, updateMode, vCreatedBodies, vModifiedBodies, vRemovedBodies, atts, *_prLoadEnvAlloc);
+        return RaveParseJSON(shared_from_this(), uri, rEnvInfo, updateMode, vCreatedBodies, vModifiedBodies, vRemovedBodies, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext));
     }
 
     virtual void Save(const std::string& filename, SelectionOptions options, const AttributesList& atts) override
@@ -1777,7 +1781,7 @@ public:
         TriangulateScene(trimesh,options,"");
     }
 
-    virtual RobotBasePtr ReadRobotURI(RobotBasePtr robot, const std::string& filename, const AttributesList& atts)
+    virtual RobotBasePtr ReadRobotURI(RobotBasePtr robot, const std::string& filename, const AttributesList& atts, const EnvironmentLoadContextPtr& pLoadContext)
     {
         EnvironmentLock lockenv(GetMutex());
 
@@ -1799,25 +1803,25 @@ public:
             }
             else if (_IsJSONFile(path)) {
                 _ClearRapidJsonBuffer();
-                if( !RaveParseJSONURI(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc) ) {
+                if( !RaveParseJSONURI(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                     return RobotBasePtr();
                 }
             }
             else if (_IsMsgPackFile(path)) {
                 _ClearRapidJsonBuffer();
-                if( !RaveParseMsgPackURI(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc) ) {
+                if( !RaveParseMsgPackURI(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                     return RobotBasePtr();
                 }
             }
             else if (StringEndsWith(path, ".json.gpg")) {
                 _ClearRapidJsonBuffer();
-                if( !RaveParseEncryptedJSONURI(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc) ) {
+                if( !RaveParseEncryptedJSONURI(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                     return RobotBasePtr();
                 }
             }
             else if (StringEndsWith(path, ".msgpack.gpg")) {
                 _ClearRapidJsonBuffer();
-                if( !RaveParseEncryptedMsgPackURI(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc) ) {
+                if( !RaveParseEncryptedMsgPackURI(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                     return RobotBasePtr();
                 }
             }
@@ -1829,13 +1833,13 @@ public:
         }
         else if( _IsJSONFile(filename) ) {
             _ClearRapidJsonBuffer();
-            if( !RaveParseJSONFile(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc) ) {
+            if( !RaveParseJSONFile(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return RobotBasePtr();
             }
         }
         else if( _IsMsgPackFile(filename) ) {
             _ClearRapidJsonBuffer();
-            if( !RaveParseMsgPackFile(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc) ) {
+            if( !RaveParseMsgPackFile(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return RobotBasePtr();
             }
         }
@@ -1911,7 +1915,7 @@ public:
         return robot;
     }
 
-    virtual RobotBasePtr ReadRobotData(RobotBasePtr robot, const std::string& data, const AttributesList& atts, const std::string& uri) override
+    virtual RobotBasePtr ReadRobotData(RobotBasePtr robot, const std::string& data, const AttributesList& atts, const std::string& uri, const EnvironmentLoadContextPtr& pLoadContext) override
     {
         EnvironmentLock lockenv(GetMutex());
 
@@ -1931,13 +1935,13 @@ public:
         }
         else if( _IsJSONData(data) ) {
             _ClearRapidJsonBuffer();
-            if( !RaveParseJSONData(shared_from_this(), robot, uri, data, atts, *_prLoadEnvAlloc) ) {
+            if( !RaveParseJSONData(shared_from_this(), robot, uri, data, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return RobotBasePtr();
             }
         }
         else if( _IsMsgPackData(data) ) {
             _ClearRapidJsonBuffer();
-            if( !RaveParseMsgPackData(shared_from_this(), robot, uri, data, atts, *_prLoadEnvAlloc) ) {
+            if( !RaveParseMsgPackData(shared_from_this(), robot, uri, data, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return RobotBasePtr();
             }
         }
@@ -1975,7 +1979,7 @@ public:
         return robot;
     }
 
-    virtual RobotBasePtr ReadRobotJSON(RobotBasePtr robot, const rapidjson::Value& rEnvInfo, const AttributesList& atts, const std::string &uri)
+    RobotBasePtr ReadRobotJSON(RobotBasePtr robot, const rapidjson::Value& rEnvInfo, const AttributesList& atts, const std::string &uri, const EnvironmentLoadContextPtr& pLoadContext) override
     {
         EnvironmentLock lockenv(GetMutex());
 
@@ -1989,13 +1993,13 @@ public:
         }
 
         _ClearRapidJsonBuffer();
-        if( !RaveParseJSON(shared_from_this(), uri, robot, rEnvInfo, atts, *_prLoadEnvAlloc) ) {
+        if( !RaveParseJSON(shared_from_this(), uri, robot, rEnvInfo, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
             robot.reset();
         }
         return robot;
     }
 
-    virtual KinBodyPtr ReadKinBodyURI(KinBodyPtr body, const std::string& filename, const AttributesList& atts) override
+    KinBodyPtr ReadKinBodyURI(KinBodyPtr body, const std::string& filename, const AttributesList& atts, const EnvironmentLoadContextPtr& pLoadContext) override
     {
         EnvironmentLock lockenv(GetMutex());
 
@@ -2017,25 +2021,25 @@ public:
             }
             else if (_IsJSONFile(path)) {
                 _ClearRapidJsonBuffer();
-                if( !RaveParseJSONURI(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc) ) {
+                if( !RaveParseJSONURI(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                     return KinBodyPtr();
                 }
             }
             else if (_IsMsgPackFile(path)) {
                 _ClearRapidJsonBuffer();
-                if( !RaveParseMsgPackURI(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc) ) {
+                if( !RaveParseMsgPackURI(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                     return KinBodyPtr();
                 }
             }
             else if (StringEndsWith(path, ".json.gpg")) {
                 _ClearRapidJsonBuffer();
-                if( !RaveParseEncryptedJSONURI(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc) ) {
+                if( !RaveParseEncryptedJSONURI(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                     return KinBodyPtr();
                 }
             }
             else if (StringEndsWith(path, ".msgpack.gpg")) {
                 _ClearRapidJsonBuffer();
-                if( !RaveParseEncryptedMsgPackURI(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc) ) {
+                if( !RaveParseEncryptedMsgPackURI(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                     return KinBodyPtr();
                 }
             }
@@ -2048,13 +2052,13 @@ public:
         }
         else if( _IsJSONFile(filename) ) {
             _ClearRapidJsonBuffer();
-            if( !RaveParseJSONFile(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc) ) {
+            if( !RaveParseJSONFile(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return KinBodyPtr();
             }
         }
         else if( _IsMsgPackFile(filename) ) {
             _ClearRapidJsonBuffer();
-            if( !RaveParseMsgPackFile(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc) ) {
+            if( !RaveParseMsgPackFile(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return KinBodyPtr();
             }
         }
@@ -2132,7 +2136,7 @@ public:
         return body;
     }
 
-    virtual KinBodyPtr ReadKinBodyData(KinBodyPtr body, const std::string& data, const AttributesList& atts, const std::string& uri)
+    KinBodyPtr ReadKinBodyData(KinBodyPtr body, const std::string& data, const AttributesList& atts, const std::string& uri, const EnvironmentLoadContextPtr& pLoadContext) override
     {
         EnvironmentLock lockenv(GetMutex());
 
@@ -2152,13 +2156,13 @@ public:
         }
         else if( _IsJSONData(data) ) {
             _ClearRapidJsonBuffer();
-            if( !RaveParseJSONData(shared_from_this(), body, uri, data, atts, *_prLoadEnvAlloc) ) {
+            if( !RaveParseJSONData(shared_from_this(), body, uri, data, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return RobotBasePtr();
             }
         }
         else if( _IsMsgPackData(data) ) {
             _ClearRapidJsonBuffer();
-            if( !RaveParseMsgPackData(shared_from_this(), body, uri, data, atts, *_prLoadEnvAlloc) ) {
+            if( !RaveParseMsgPackData(shared_from_this(), body, uri, data, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return RobotBasePtr();
             }
         }
@@ -2193,7 +2197,7 @@ public:
         return body;
     }
 
-    virtual KinBodyPtr ReadKinBodyJSON(KinBodyPtr body, const rapidjson::Value& rEnvInfo, const AttributesList& atts, const std::string &uri)
+    KinBodyPtr ReadKinBodyJSON(KinBodyPtr body, const rapidjson::Value& rEnvInfo, const AttributesList& atts, const std::string &uri, const EnvironmentLoadContextPtr& pLoadContext) override
     {
         EnvironmentLock lockenv(GetMutex());
 
@@ -2207,7 +2211,7 @@ public:
         }
 
         _ClearRapidJsonBuffer();
-        if( !RaveParseJSON(shared_from_this(), uri, body, rEnvInfo, atts, *_prLoadEnvAlloc) ) {
+        if( !RaveParseJSON(shared_from_this(), uri, body, rEnvInfo, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
             body.reset();
         }
         return body;
@@ -2238,7 +2242,7 @@ public:
         return InterfaceBasePtr();
     }
 
-    virtual InterfaceBasePtr ReadInterfaceURI(InterfaceBasePtr pinterface, InterfaceType type, const std::string& filename, const AttributesList& atts)
+    virtual InterfaceBasePtr ReadInterfaceURI(InterfaceBasePtr pinterface, InterfaceType type, const std::string& filename, const AttributesList& atts, const EnvironmentLoadContextPtr& pLoadContext)
     {
         EnvironmentLock lockenv(GetMutex());
         bool bIsCollada = false;
@@ -2288,44 +2292,44 @@ public:
             } else if (bIsJSON) {
                 _ClearRapidJsonBuffer();
                 if (bIsURI) {
-                    if( !RaveParseJSONURI(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc) ) {
+                    if( !RaveParseJSONURI(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                         return InterfaceBasePtr();
                     }
                 } else {
-                    if( !RaveParseJSONFile(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc) ) {
+                    if( !RaveParseJSONFile(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                         return InterfaceBasePtr();
                     }
                 }
             } else if (bIsMsgPack) {
                 _ClearRapidJsonBuffer();
                 if (bIsURI) {
-                    if( !RaveParseMsgPackURI(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc) ) {
+                    if( !RaveParseMsgPackURI(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                         return InterfaceBasePtr();
                     }
                 } else {
-                    if( !RaveParseMsgPackFile(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc) ) {
+                    if( !RaveParseMsgPackFile(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                         return InterfaceBasePtr();
                     }
                 }
             } else if (bIsEncryptedJSON) {
                 _ClearRapidJsonBuffer();
                 if (bIsURI) {
-                    if ( !RaveParseEncryptedJSONURI(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc) ) {
+                    if ( !RaveParseEncryptedJSONURI(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                         return InterfaceBasePtr();
                     }
                 } else {
-                    if (!RaveParseEncryptedJSONFile(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc)) {
+                    if (!RaveParseEncryptedJSONFile(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext))) {
                         return InterfaceBasePtr();
                     }
                 }
             } else if (bIsEncryptedMsgPack) {
                 _ClearRapidJsonBuffer();
                 if (bIsURI) {
-                    if ( !RaveParseEncryptedMsgPackURI(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc) ) {
+                    if ( !RaveParseEncryptedMsgPackURI(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                         return InterfaceBasePtr();
                     }
                 } else {
-                    if (!RaveParseEncryptedMsgPackFile(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc)) {
+                    if (!RaveParseEncryptedMsgPackFile(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext))) {
                         return InterfaceBasePtr();
                     }
                 }
@@ -4506,6 +4510,18 @@ protected:
         _prLoadEnvAlloc->Clear();
     }
 
+    inline EnvironmentLoadContextJSON& _GetEnvironmentLoadContextJSON(const EnvironmentLoadContextPtr& pLoadContext) {
+        if( !!pLoadContext ) {
+            EnvironmentLoadContextJSON* pJSON = dynamic_cast<EnvironmentLoadContextJSON*>(pLoadContext.get());
+            if( !!pJSON ) {
+                return *pJSON;
+            }
+        }
+
+        _dummyLoadContext.Reset(); // always reset the dummy context since don't know what was previously stored
+        return _dummyLoadContext;
+    }
+
     std::vector<KinBodyPtr> _vecbodies;     ///< all objects that are collidable (includes robots) sorted by env body index ascending order. Note that some element can be nullptr, and size of _vecbodies should be kept unchanged when body is removed from env. protected by _mutexInterfaces. [0] should always be kept null since 0 means no assignment.
 
     string_map<int> _mapBodyNameIndex; /// maps body name to env body index of bodies stored in _vecbodies sorted by name. used to lookup kin body by name. protected by _mutexInterfaces.
@@ -4552,6 +4568,7 @@ protected:
     std::map<std::string, uint64_t> _mapUInt64Parameters; ///< a custom user-driven parameters
     std::vector<uint8_t> _vRapidJsonLoadBuffer;
     boost::shared_ptr<rapidjson::MemoryPoolAllocator<> > _prLoadEnvAlloc; ///< allocator used for loading environments
+    EnvironmentLoadContextJSON _dummyLoadContext; ///< in case the user did not pass a load context
 
     bool _bInit;                   ///< environment is initialized
     bool _bEnableSimulation;            ///< enable simulation loop
