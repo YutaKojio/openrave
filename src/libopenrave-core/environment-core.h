@@ -66,7 +66,8 @@ inline void EnsureVectorSize(std::vector<T>& vec, size_t size)
     }
 }
 
-class TimedUniqueLock : public std::unique_lock<std::timed_mutex> {
+class TimedUniqueLock : public std::unique_lock<std::timed_mutex>
+{
 public:
     /**
      * Try to lock a mutex for a given duration if the duration is a positive value. Otherwise it waits for the lock without a timeout.
@@ -82,7 +83,8 @@ public:
     }
 };
 
-class TimedSharedLock : public std::shared_lock<std::shared_timed_mutex> {
+class TimedSharedLock : public std::shared_lock<std::shared_timed_mutex>
+{
 public:
     /**
      * Try to lock a mutex for a given duration if the duration is a positive value. Otherwise it waits for the lock without a timeout.
@@ -98,7 +100,8 @@ public:
     }
 };
 
-class TimedExclusiveLock {
+class TimedExclusiveLock
+{
 public:
     /**
      * Try to exclusively lock a mutex for a given duration if the duration is a positive value. Otherwise it waits for the lock without a timeout.
@@ -587,7 +590,7 @@ public:
         }
     }
 
-    bool LoadURI(const std::string& uri, const AttributesList& atts) override
+    bool LoadURI(const std::string& uri, const AttributesList& atts, const EnvironmentLoadContextPtr& pLoadContext) override
     {
         std::string path;
         if (!_IsURI(uri, path)) {
@@ -599,19 +602,19 @@ public:
         }
         else if (_IsJSONFile(path)) {
             _ClearRapidJsonBuffer();
-            return RaveParseJSONURI(shared_from_this(), uri, UFIM_Exact, atts, *_prLoadEnvAlloc);
+            return RaveParseJSONURI(shared_from_this(), uri, UFIM_Exact, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext));
         }
         else if (_IsMsgPackFile(path)) {
             _ClearRapidJsonBuffer();
-            return RaveParseMsgPackURI(shared_from_this(), uri, UFIM_Exact, atts, *_prLoadEnvAlloc);
+            return RaveParseMsgPackURI(shared_from_this(), uri, UFIM_Exact, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext));
         }
         else if (StringEndsWith(path, ".json.gpg")) {
             _ClearRapidJsonBuffer();
-            return RaveParseEncryptedJSONURI(shared_from_this(), uri, UFIM_Exact, atts, *_prLoadEnvAlloc);
+            return RaveParseEncryptedJSONURI(shared_from_this(), uri, UFIM_Exact, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext));
         }
         else if (StringEndsWith(path, ".msgpack.gpg")) {
             _ClearRapidJsonBuffer();
-            return RaveParseEncryptedMsgPackURI(shared_from_this(), uri, UFIM_Exact, atts, *_prLoadEnvAlloc);
+            return RaveParseEncryptedMsgPackURI(shared_from_this(), uri, UFIM_Exact, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext));
         }
         else {
             RAVELOG_WARN_FORMAT("load failed on uri '%s' since could not determine the file type", uri);
@@ -619,7 +622,11 @@ public:
         return false;
     }
 
-    virtual bool Load(const std::string& filename, const AttributesList& atts) override
+    EnvironmentLoadContextPtr CreateEnvironmentLoadContext() {
+        return EnvironmentLoadContextPtr(new EnvironmentLoadContextJSON());
+    }
+
+    bool Load(const std::string& filename, const AttributesList& atts, const EnvironmentLoadContextPtr& pLoadContext) override
     {
         EnvironmentLock lockenv(GetMutex());
         OpenRAVEXMLParser::GetXMLErrorCount() = 0;
@@ -640,25 +647,25 @@ public:
         }
         else if( _IsJSONFile(filename) ) {
             _ClearRapidJsonBuffer();
-            if( RaveParseJSONFile(shared_from_this(), filename, UFIM_Exact, atts, *_prLoadEnvAlloc) ) {
+            if( RaveParseJSONFile(shared_from_this(), filename, UFIM_Exact, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return true;
             }
         }
         else if( _IsMsgPackFile(filename) ) {
             _ClearRapidJsonBuffer();
-            if( RaveParseMsgPackFile(shared_from_this(), filename, UFIM_Exact, atts, *_prLoadEnvAlloc) ) {
+            if( RaveParseMsgPackFile(shared_from_this(), filename, UFIM_Exact, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return true;
             }
         }
         else if (StringEndsWith(filename, ".json.gpg")) {
             _ClearRapidJsonBuffer();
-            if( RaveParseEncryptedJSONFile(shared_from_this(), filename, UFIM_Exact, atts, *_prLoadEnvAlloc) ) {
+            if( RaveParseEncryptedJSONFile(shared_from_this(), filename, UFIM_Exact, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return true;
             }
         }
         else if (StringEndsWith(filename, ".msgpack.gpg")) {
             _ClearRapidJsonBuffer();
-            if( RaveParseEncryptedMsgPackFile(shared_from_this(), filename, UFIM_Exact, atts, *_prLoadEnvAlloc) ) {
+            if( RaveParseEncryptedMsgPackFile(shared_from_this(), filename, UFIM_Exact, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return true;
             }
         }
@@ -671,7 +678,7 @@ public:
             }
         }
         else if( !_IsOpenRAVEFile(filename) && _IsRigidModelFile(filename) ) {
-            KinBodyPtr pbody = ReadKinBodyURI(KinBodyPtr(),filename,atts);
+            KinBodyPtr pbody = ReadKinBodyURI(KinBodyPtr(), filename, atts, pLoadContext);
             if( !!pbody ) {
                 _AddKinBody(pbody,IAM_AllowRenaming);
                 UpdatePublishedBodies();
@@ -691,7 +698,7 @@ public:
         return false;
     }
 
-    virtual bool LoadData(const std::string& data, const AttributesList& atts, const std::string& uri)
+    bool LoadData(const std::string& data, const AttributesList& atts, const std::string& uri, const EnvironmentLoadContextPtr& pLoadContext) override
     {
         EnvironmentLock lockenv(GetMutex());
         if( _IsColladaData(data) ) {
@@ -699,20 +706,20 @@ public:
         }
         if( _IsJSONData(data) ) {
             _ClearRapidJsonBuffer();
-            return RaveParseJSONData(shared_from_this(), uri, data, UFIM_Exact, atts, *_prLoadEnvAlloc);
+            return RaveParseJSONData(shared_from_this(), uri, data, UFIM_Exact, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext));
         }
         if( _IsMsgPackData(data) ) {
             _ClearRapidJsonBuffer();
-            return RaveParseMsgPackData(shared_from_this(), uri, data, UFIM_Exact, atts, *_prLoadEnvAlloc);
+            return RaveParseMsgPackData(shared_from_this(), uri, data, UFIM_Exact, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext));
         }
         return _ParseXMLData(OpenRAVEXMLParser::CreateEnvironmentReader(shared_from_this(),atts),data);
     }
 
-    bool LoadJSON(const rapidjson::Value& rEnvInfo, UpdateFromInfoMode updateMode, std::vector<KinBodyPtr>& vCreatedBodies, std::vector<KinBodyPtr>& vModifiedBodies, std::vector<KinBodyPtr>& vRemovedBodies, const AttributesList& atts, const std::string &uri) override
+    bool LoadJSON(const rapidjson::Value& rEnvInfo, UpdateFromInfoMode updateMode, std::vector<KinBodyPtr>& vCreatedBodies, std::vector<KinBodyPtr>& vModifiedBodies, std::vector<KinBodyPtr>& vRemovedBodies, const AttributesList& atts, const std::string& uri, const EnvironmentLoadContextPtr& pLoadContext) override
     {
         EnvironmentLock lockenv(GetMutex());
         _ClearRapidJsonBuffer();
-        return RaveParseJSON(shared_from_this(), uri, rEnvInfo, updateMode, vCreatedBodies, vModifiedBodies, vRemovedBodies, atts, *_prLoadEnvAlloc);
+        return RaveParseJSON(shared_from_this(), uri, rEnvInfo, updateMode, vCreatedBodies, vModifiedBodies, vRemovedBodies, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext));
     }
 
     virtual void Save(const std::string& filename, SelectionOptions options, const AttributesList& atts) override
@@ -1774,7 +1781,7 @@ public:
         TriangulateScene(trimesh,options,"");
     }
 
-    virtual RobotBasePtr ReadRobotURI(RobotBasePtr robot, const std::string& filename, const AttributesList& atts)
+    virtual RobotBasePtr ReadRobotURI(RobotBasePtr robot, const std::string& filename, const AttributesList& atts, const EnvironmentLoadContextPtr& pLoadContext)
     {
         EnvironmentLock lockenv(GetMutex());
 
@@ -1796,25 +1803,25 @@ public:
             }
             else if (_IsJSONFile(path)) {
                 _ClearRapidJsonBuffer();
-                if( !RaveParseJSONURI(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc) ) {
+                if( !RaveParseJSONURI(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                     return RobotBasePtr();
                 }
             }
             else if (_IsMsgPackFile(path)) {
                 _ClearRapidJsonBuffer();
-                if( !RaveParseMsgPackURI(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc) ) {
+                if( !RaveParseMsgPackURI(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                     return RobotBasePtr();
                 }
             }
             else if (StringEndsWith(path, ".json.gpg")) {
                 _ClearRapidJsonBuffer();
-                if( !RaveParseEncryptedJSONURI(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc) ) {
+                if( !RaveParseEncryptedJSONURI(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                     return RobotBasePtr();
                 }
             }
             else if (StringEndsWith(path, ".msgpack.gpg")) {
                 _ClearRapidJsonBuffer();
-                if( !RaveParseEncryptedMsgPackURI(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc) ) {
+                if( !RaveParseEncryptedMsgPackURI(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                     return RobotBasePtr();
                 }
             }
@@ -1826,13 +1833,13 @@ public:
         }
         else if( _IsJSONFile(filename) ) {
             _ClearRapidJsonBuffer();
-            if( !RaveParseJSONFile(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc) ) {
+            if( !RaveParseJSONFile(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return RobotBasePtr();
             }
         }
         else if( _IsMsgPackFile(filename) ) {
             _ClearRapidJsonBuffer();
-            if( !RaveParseMsgPackFile(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc) ) {
+            if( !RaveParseMsgPackFile(shared_from_this(), robot, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return RobotBasePtr();
             }
         }
@@ -1908,7 +1915,7 @@ public:
         return robot;
     }
 
-    virtual RobotBasePtr ReadRobotData(RobotBasePtr robot, const std::string& data, const AttributesList& atts, const std::string& uri) override
+    virtual RobotBasePtr ReadRobotData(RobotBasePtr robot, const std::string& data, const AttributesList& atts, const std::string& uri, const EnvironmentLoadContextPtr& pLoadContext) override
     {
         EnvironmentLock lockenv(GetMutex());
 
@@ -1928,13 +1935,13 @@ public:
         }
         else if( _IsJSONData(data) ) {
             _ClearRapidJsonBuffer();
-            if( !RaveParseJSONData(shared_from_this(), robot, uri, data, atts, *_prLoadEnvAlloc) ) {
+            if( !RaveParseJSONData(shared_from_this(), robot, uri, data, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return RobotBasePtr();
             }
         }
         else if( _IsMsgPackData(data) ) {
             _ClearRapidJsonBuffer();
-            if( !RaveParseMsgPackData(shared_from_this(), robot, uri, data, atts, *_prLoadEnvAlloc) ) {
+            if( !RaveParseMsgPackData(shared_from_this(), robot, uri, data, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return RobotBasePtr();
             }
         }
@@ -1972,7 +1979,7 @@ public:
         return robot;
     }
 
-    virtual RobotBasePtr ReadRobotJSON(RobotBasePtr robot, const rapidjson::Value& rEnvInfo, const AttributesList& atts, const std::string &uri)
+    RobotBasePtr ReadRobotJSON(RobotBasePtr robot, const rapidjson::Value& rEnvInfo, const AttributesList& atts, const std::string &uri, const EnvironmentLoadContextPtr& pLoadContext) override
     {
         EnvironmentLock lockenv(GetMutex());
 
@@ -1986,13 +1993,13 @@ public:
         }
 
         _ClearRapidJsonBuffer();
-        if( !RaveParseJSON(shared_from_this(), uri, robot, rEnvInfo, atts, *_prLoadEnvAlloc) ) {
+        if( !RaveParseJSON(shared_from_this(), uri, robot, rEnvInfo, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
             robot.reset();
         }
         return robot;
     }
 
-    virtual KinBodyPtr ReadKinBodyURI(KinBodyPtr body, const std::string& filename, const AttributesList& atts) override
+    KinBodyPtr ReadKinBodyURI(KinBodyPtr body, const std::string& filename, const AttributesList& atts, const EnvironmentLoadContextPtr& pLoadContext) override
     {
         EnvironmentLock lockenv(GetMutex());
 
@@ -2014,25 +2021,25 @@ public:
             }
             else if (_IsJSONFile(path)) {
                 _ClearRapidJsonBuffer();
-                if( !RaveParseJSONURI(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc) ) {
+                if( !RaveParseJSONURI(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                     return KinBodyPtr();
                 }
             }
             else if (_IsMsgPackFile(path)) {
                 _ClearRapidJsonBuffer();
-                if( !RaveParseMsgPackURI(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc) ) {
+                if( !RaveParseMsgPackURI(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                     return KinBodyPtr();
                 }
             }
             else if (StringEndsWith(path, ".json.gpg")) {
                 _ClearRapidJsonBuffer();
-                if( !RaveParseEncryptedJSONURI(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc) ) {
+                if( !RaveParseEncryptedJSONURI(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                     return KinBodyPtr();
                 }
             }
             else if (StringEndsWith(path, ".msgpack.gpg")) {
                 _ClearRapidJsonBuffer();
-                if( !RaveParseEncryptedMsgPackURI(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc) ) {
+                if( !RaveParseEncryptedMsgPackURI(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                     return KinBodyPtr();
                 }
             }
@@ -2045,13 +2052,13 @@ public:
         }
         else if( _IsJSONFile(filename) ) {
             _ClearRapidJsonBuffer();
-            if( !RaveParseJSONFile(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc) ) {
+            if( !RaveParseJSONFile(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return KinBodyPtr();
             }
         }
         else if( _IsMsgPackFile(filename) ) {
             _ClearRapidJsonBuffer();
-            if( !RaveParseMsgPackFile(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc) ) {
+            if( !RaveParseMsgPackFile(shared_from_this(), body, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return KinBodyPtr();
             }
         }
@@ -2129,7 +2136,7 @@ public:
         return body;
     }
 
-    virtual KinBodyPtr ReadKinBodyData(KinBodyPtr body, const std::string& data, const AttributesList& atts, const std::string& uri)
+    KinBodyPtr ReadKinBodyData(KinBodyPtr body, const std::string& data, const AttributesList& atts, const std::string& uri, const EnvironmentLoadContextPtr& pLoadContext) override
     {
         EnvironmentLock lockenv(GetMutex());
 
@@ -2149,13 +2156,13 @@ public:
         }
         else if( _IsJSONData(data) ) {
             _ClearRapidJsonBuffer();
-            if( !RaveParseJSONData(shared_from_this(), body, uri, data, atts, *_prLoadEnvAlloc) ) {
+            if( !RaveParseJSONData(shared_from_this(), body, uri, data, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return RobotBasePtr();
             }
         }
         else if( _IsMsgPackData(data) ) {
             _ClearRapidJsonBuffer();
-            if( !RaveParseMsgPackData(shared_from_this(), body, uri, data, atts, *_prLoadEnvAlloc) ) {
+            if( !RaveParseMsgPackData(shared_from_this(), body, uri, data, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                 return RobotBasePtr();
             }
         }
@@ -2190,7 +2197,7 @@ public:
         return body;
     }
 
-    virtual KinBodyPtr ReadKinBodyJSON(KinBodyPtr body, const rapidjson::Value& rEnvInfo, const AttributesList& atts, const std::string &uri)
+    KinBodyPtr ReadKinBodyJSON(KinBodyPtr body, const rapidjson::Value& rEnvInfo, const AttributesList& atts, const std::string &uri, const EnvironmentLoadContextPtr& pLoadContext) override
     {
         EnvironmentLock lockenv(GetMutex());
 
@@ -2204,7 +2211,7 @@ public:
         }
 
         _ClearRapidJsonBuffer();
-        if( !RaveParseJSON(shared_from_this(), uri, body, rEnvInfo, atts, *_prLoadEnvAlloc) ) {
+        if( !RaveParseJSON(shared_from_this(), uri, body, rEnvInfo, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
             body.reset();
         }
         return body;
@@ -2235,7 +2242,7 @@ public:
         return InterfaceBasePtr();
     }
 
-    virtual InterfaceBasePtr ReadInterfaceURI(InterfaceBasePtr pinterface, InterfaceType type, const std::string& filename, const AttributesList& atts)
+    virtual InterfaceBasePtr ReadInterfaceURI(InterfaceBasePtr pinterface, InterfaceType type, const std::string& filename, const AttributesList& atts, const EnvironmentLoadContextPtr& pLoadContext)
     {
         EnvironmentLock lockenv(GetMutex());
         bool bIsCollada = false;
@@ -2285,44 +2292,44 @@ public:
             } else if (bIsJSON) {
                 _ClearRapidJsonBuffer();
                 if (bIsURI) {
-                    if( !RaveParseJSONURI(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc) ) {
+                    if( !RaveParseJSONURI(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                         return InterfaceBasePtr();
                     }
                 } else {
-                    if( !RaveParseJSONFile(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc) ) {
+                    if( !RaveParseJSONFile(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                         return InterfaceBasePtr();
                     }
                 }
             } else if (bIsMsgPack) {
                 _ClearRapidJsonBuffer();
                 if (bIsURI) {
-                    if( !RaveParseMsgPackURI(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc) ) {
+                    if( !RaveParseMsgPackURI(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                         return InterfaceBasePtr();
                     }
                 } else {
-                    if( !RaveParseMsgPackFile(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc) ) {
+                    if( !RaveParseMsgPackFile(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                         return InterfaceBasePtr();
                     }
                 }
             } else if (bIsEncryptedJSON) {
                 _ClearRapidJsonBuffer();
                 if (bIsURI) {
-                    if ( !RaveParseEncryptedJSONURI(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc) ) {
+                    if ( !RaveParseEncryptedJSONURI(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                         return InterfaceBasePtr();
                     }
                 } else {
-                    if (!RaveParseEncryptedJSONFile(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc)) {
+                    if (!RaveParseEncryptedJSONFile(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext))) {
                         return InterfaceBasePtr();
                     }
                 }
             } else if (bIsEncryptedMsgPack) {
                 _ClearRapidJsonBuffer();
                 if (bIsURI) {
-                    if ( !RaveParseEncryptedMsgPackURI(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc) ) {
+                    if ( !RaveParseEncryptedMsgPackURI(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext)) ) {
                         return InterfaceBasePtr();
                     }
                 } else {
-                    if (!RaveParseEncryptedMsgPackFile(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc)) {
+                    if (!RaveParseEncryptedMsgPackFile(shared_from_this(), pbody, filename, atts, *_prLoadEnvAlloc, _GetEnvironmentLoadContextJSON(pLoadContext))) {
                         return InterfaceBasePtr();
                     }
                 }
@@ -2998,153 +3005,146 @@ public:
 
         }
 
-        // make a copy of _vecbodies because we will be doing some reordering
-        std::vector<KinBodyPtr> vBodies;
-        std::list<KinBodyPtr> listBodiesTemporarilyRenamed; // in order to avoid clashing names, sometimes bodies are renamed temporariliy and placed in this list. If they targetted again with a different name, then they are put back into the environment
-        {
-            SharedLock lock533(_mutexInterfaces);
-            vBodies = _vecbodies;
-        }
-        {
-            for (std::vector<KinBodyPtr>::iterator it = vBodies.begin(); it != vBodies.end(); ) {
-                if (!*it) {
-                    it = vBodies.erase(it);
-                }
-                else {
-                    it++;
-                }
+        // If the environment is large but we are only updating a small number of bodies, building a full lookup table is expensive relative to the amount of lookups we actually do.
+        // We can reduce this somewhat by pre-filtering the set of names/ids that could ever be looked up, and only including those in our lookup table.
+        // This incurs (info._vBodyInfos.size() + vBodies.size()) more hash _lookups_, but means that we save up to (vBodies.size() - info._vBodyInfos.size()) _allocations_.
+        // Since we expect vBodies.size() >> info._vBodyInfos.size() in most cases, and allocations are more costly than lookups, this is overall a speedup despite the extra steps.
+        std::unordered_set<string_view> bodyIdsToUpdate; // string_views are over info._vBodyInfos, guaranteed lifetime for the rest of this function
+        std::unordered_set<string_view> bodyNamesToUpdate;
+        for (const KinBody::KinBodyInfoPtr& pKinBodyInfo : info._vBodyInfos) {
+            // If we have more than one info that targets the same id / body name, throw - UpdateFromInfo is not designed to update the same object more than once in a call
+            if (!pKinBodyInfo->_id.empty() && !bodyIdsToUpdate.emplace(pKinBodyInfo->_id).second) {
+                throw OPENRAVE_EXCEPTION_FORMAT(_("Duplicate body info ID '%s' in call to UpdateFromInfo"), pKinBodyInfo->_id, ORE_InvalidArguments);
+            }
+            if (!pKinBodyInfo->_name.empty() && !bodyNamesToUpdate.emplace(pKinBodyInfo->_name).second) {
+                throw OPENRAVE_EXCEPTION_FORMAT(_("Duplicate body info name '%s' in call to UpdateFromInfo"), pKinBodyInfo->_name, ORE_InvalidArguments);
             }
         }
 
-        // Set of indices that have already been used for vBodies
-        std::unordered_set<int> usedBodyIndexSet;
+        std::list<KinBodyPtr> listBodiesTemporarilyRenamed; // in order to avoid clashing names, sometimes bodies are renamed temporarily and placed in this list. If they targeted again with a different name, then they are put back into the environment
+        // Build a lookup table for the bodies available to be matched against from vBodies
+        // When trying to identify candidate matches, we can do two hash lookups instead of a sequential scan.
+        // If we match an existing body, then we just need to remove the id/name maps that linked to it to prevent it getting matched again later.
+        // These maps use string_views over the bodies in the environment; these bodies _are_ removed during iteration; care must be taken to erase the matching entries.
+        std::unordered_map<string_view, KinBodyPtr> mapExistingBodiesById; // Map of body id -> existing body in the environment
+        std::unordered_map<string_view, KinBodyPtr> mapExistingBodiesByName; // Map of body name -> existing body in the environment
+
+        {
+            SharedLock lock533(_mutexInterfaces);
+            for (size_t bodyIndex = 0; bodyIndex < _vecbodies.size(); bodyIndex++) {
+                // It's possible for holes to exist in vBodies since when bodies are removed from the environment their entries in _vecbodies are just nulled out.
+                if (!_vecbodies[bodyIndex]) {
+                    continue;
+                }
+
+                // If this body doesn't have a name or ID that _can_ be matched, there's no need to add a record for it in our lookup table.
+                const KinBody& body = *_vecbodies[bodyIndex];
+                if (bodyIdsToUpdate.find(body.GetId()) == bodyIdsToUpdate.end() && bodyNamesToUpdate.find(body.GetName()) == bodyNamesToUpdate.end()) {
+                    continue;
+                }
+                mapExistingBodiesById[body.GetId()] = _vecbodies[bodyIndex];
+                mapExistingBodiesByName[body.GetName()] = _vecbodies[bodyIndex];
+            }
+        }
+
+        // Keep a list of the bodies that we have matched to infos - in the event that the caller did _not_ specify OnlySpecifiedBodiesExact,
+        // when we are finished we will want to remove all bodies in the environment that are _not_ in this list.
+        // Store raw pointers here instead of shared pointers because we don't need to track ownership, just membership.
+        std::unordered_set<KinBody*> setBodiesWithMatchingInfos;
 
         // internally manipulates _vecbodies using _AddKinBody/_AddRobot/_RemoveKinBodyFromIterator
-        for(int inputBodyIndex = 0; inputBodyIndex < (int)info._vBodyInfos.size(); ++inputBodyIndex) {
-            const KinBody::KinBodyInfoConstPtr& pKinBodyInfo = info._vBodyInfos[inputBodyIndex];
+        for(const KinBody::KinBodyInfoPtr& pKinBodyInfo : info._vBodyInfos) {
             const KinBody::KinBodyInfo& kinBodyInfo = *pKinBodyInfo;
             RAVELOG_VERBOSE_FORMAT("env=%s, id '%s', name '%s', _vGrabbedInfos=%d", GetNameId()%pKinBodyInfo->_id%pKinBodyInfo->_name%pKinBodyInfo->_vGrabbedInfos.size());
             RobotBase::RobotBaseInfoConstPtr pRobotBaseInfo = OPENRAVE_DYNAMIC_POINTER_CAST<const RobotBase::RobotBaseInfo>(pKinBodyInfo);
-            KinBodyPtr pMatchExistingBody; // matches to pKinBodyInfo
-            int bodyIndex = -1; // index to vBodies to use. -1 if not used
-            {
-                // find existing body in the env
-                std::vector<KinBodyPtr>::iterator itExistingSameId = vBodies.end();
-                std::vector<KinBodyPtr>::iterator itExistingSameName = vBodies.end();
-                std::vector<KinBodyPtr>::iterator itExistingSameIdName = vBodies.end();
 
-                if( updateMode == UFIM_OnlySpecifiedBodiesExact ) {
-                    // can be any of the bodies, but have to make sure not to overlap
-                    //bodyIndex = inputBodyIndex;
-                    // search only in the unprocessed part of vBodies
-                    for (int ibody = 0; ibody < (int)vBodies.size(); ++ibody) {
-                        if (usedBodyIndexSet.find(ibody) != usedBodyIndexSet.end()) {
-                            continue;
-                        }
-                        const KinBodyPtr& pbody = vBodies[ibody];
-                        if (!pbody) {
-                            continue;
-                        }
-                        bool bIdMatch = !pbody->_id.empty() && pbody->_id == kinBodyInfo._id;
-                        bool bNameMatch = !pbody->_name.empty() && pbody->_name == kinBodyInfo._name;
-                        if( bIdMatch && bNameMatch ) {
-                            itExistingSameIdName = itExistingSameId = itExistingSameName = vBodies.begin() + ibody;
-                            break;
-                        }
-                        if( bIdMatch && itExistingSameId == vBodies.end() ) {
-                            itExistingSameId = vBodies.begin() + ibody;
-                        }
-                        if( bNameMatch && itExistingSameName == vBodies.end() ) {
-                            itExistingSameName = vBodies.begin() + ibody;
-                        }
-                    }
+            // Try and match this body info to an existing body
+            KinBodyPtr pMatchExistingBody; // Will be loaded with the existing body to update, if any
+            do {
+                // Check if we have bodies with matching names / ids
+                const std::unordered_map<string_view, KinBodyPtr>::iterator itExistingBodyById = mapExistingBodiesById.find(kinBodyInfo._id);
+                const std::unordered_map<string_view, KinBodyPtr>::iterator itExistingBodyByName = mapExistingBodiesByName.find(kinBodyInfo._name);
+
+                // If we do, preemptively move those matching bodies _out_ of our lookup tables
+                // Note that if ID and name matched two _different_ bodies, we need to do something with the body that has the same name.
+                KinBodyPtr pMatchExistingBodySameId, pMatchExistingBodySameName;
+                if (itExistingBodyById != mapExistingBodiesById.end()) {
+                    pMatchExistingBodySameId = std::move(itExistingBodyById->second);
                 }
-                else {
-                    bodyIndex = inputBodyIndex;
-                    // search only in the unprocessed part of vBodies
-                    if( (int)vBodies.size() > inputBodyIndex ) {
-                        for (std::vector<KinBodyPtr>::iterator itBody = vBodies.begin() + inputBodyIndex; itBody != vBodies.end(); ++itBody) {
-                            if (!(*itBody)) {
-                                continue;
-                            }
-                            bool bIdMatch = !(*itBody)->_id.empty() && (*itBody)->_id == kinBodyInfo._id;
-                            bool bNameMatch = !(*itBody)->_name.empty() && (*itBody)->_name == kinBodyInfo._name;
-                            if( bIdMatch && bNameMatch ) {
-                                itExistingSameIdName = itBody;
-                                itExistingSameId = itBody;
-                                itExistingSameName = itBody;
-                                break;
-                            }
-                            if( bIdMatch && itExistingSameId == vBodies.end() ) {
-                                itExistingSameId = itBody;
-                            }
-                            if( bNameMatch && itExistingSameName == vBodies.end() ) {
-                                itExistingSameName = itBody;
-                            }
-                        }
+                if (itExistingBodyByName != mapExistingBodiesByName.end()) {
+                    pMatchExistingBodySameName = std::move(itExistingBodyByName->second);
+                }
+
+                // Pick the best existing body index based on our resolution order
+                pMatchExistingBody = !!pMatchExistingBodySameId ? pMatchExistingBodySameId : pMatchExistingBodySameName;
+
+                // If we didn't match anything, we have to just create a new body based on this info
+                if (!pMatchExistingBody) {
+                    break;
+                }
+
+                // If we matched a body to reuse, clear the mappings so that we can't double-process it
+                // This also ensures no dangling string_views in the event this body gets destroyed later in the loop
+                mapExistingBodiesById.erase(pMatchExistingBody->GetId());
+                mapExistingBodiesByName.erase(pMatchExistingBody->GetName());
+
+                bool bNameMatchesForDifferentBody = !!pMatchExistingBodySameName && pMatchExistingBody != pMatchExistingBodySameName;
+                if (bNameMatchesForDifferentBody) {
+                    RAVELOG_DEBUG_FORMAT("env=%s, have to clear body name '%s' id=%s for loading body with id=%s", GetNameId() % pMatchExistingBodySameName->GetName() % pMatchExistingBodySameName->GetId() % pMatchExistingBody->GetId());
+                }
+
+                // If we matched an existing body, but that body is of a different interface to the info (e.g robot vs plain body), then we can't just update, need to recreate it.
+                bool bInterfaceMatches = pMatchExistingBody->GetXMLId() == pKinBodyInfo->_interfaceType;
+                if (!bInterfaceMatches || pMatchExistingBody->IsRobot() != pKinBodyInfo->_isRobot) {
+                    KinBodyPtr pBodyToRemove = std::move(pMatchExistingBody); // Invalidates existing body output
+                    RAVELOG_VERBOSE_FORMAT("env=%s, body '%s' interface is changed, remove old body from environment. xmlid=%s, _interfaceType=%s, isRobot %d != %d", GetNameId() % pBodyToRemove->_id % pBodyToRemove->GetXMLId() % pKinBodyInfo->_interfaceType % pBodyToRemove->IsRobot() % pKinBodyInfo->_isRobot);
+                    vRemovedBodies.push_back(pBodyToRemove);
+
+                    ExclusiveLock lock690(_mutexInterfaces);
+                    vector<KinBodyPtr>::iterator itBodyToRemove = std::find(_vecbodies.begin(), _vecbodies.end(), pBodyToRemove);
+                    if (itBodyToRemove != _vecbodies.end()) {
+                        _InvalidateKinBodyFromEnvBodyIndex(pBodyToRemove->GetEnvironmentBodyIndex());
                     }
                 }
 
-                std::vector<KinBodyPtr>::iterator itExisting = itExistingSameIdName;
-                if( itExisting == vBodies.end() ) {
-                    itExisting = itExistingSameId;
+                // If we matched by ID instead of name, it's possible there exists another body in the env with the same name as our body info.
+                // This would cause a conflict if we try and update our current (id matched body) to have the same name.
+                // Since the other body with the same name might get processed again later (by id?), temporarily rename it so that we can continue.
+                if (bNameMatchesForDifferentBody) {
+                    // Since we are renaming a body, and our existing body indices map uses string views over our body names, need to make sure we remove this body's entry / add it back after rename
+                    mapExistingBodiesByName.erase(itExistingBodyByName); // assuming itExistingBodyByName is still valid since it has a different name
+                    pMatchExistingBodySameName->SetName(_GetUniqueName(pMatchExistingBodySameName->GetName() + "_tempRenamedDueToConflict_"));
+                    mapExistingBodiesByName.emplace(pMatchExistingBodySameName->GetName(), pMatchExistingBodySameName); // restores from the std::move
+                    listBodiesTemporarilyRenamed.push_back(pMatchExistingBodySameName);
                 }
-                if( itExisting == vBodies.end() ) {
-                    itExisting = itExistingSameName;
-                }
-
-                // check if interface type changed, if so, remove the body and treat it as a new body
-                if (itExisting != vBodies.end()) {
-                    KinBodyPtr pBody = *itExisting;
-                    bool bInterfaceMatches = pBody->GetXMLId() == pKinBodyInfo->_interfaceType;
-                    if( !bInterfaceMatches || pBody->IsRobot() != pKinBodyInfo->_isRobot ) {
-                        RAVELOG_VERBOSE_FORMAT("env=%s, body '%s' interface is changed, remove old body from environment. xmlid=%s, _interfaceType=%s, isRobot %d != %d", GetNameId()%pBody->_id%pBody->GetXMLId()%pKinBodyInfo->_interfaceType%pBody->IsRobot()%pKinBodyInfo->_isRobot);
-                        itExisting = vBodies.end();
-                        vRemovedBodies.push_back(pBody);
-
-                        ExclusiveLock lock690(_mutexInterfaces);
-                        vector<KinBodyPtr>::iterator itBodyToRemove = std::find(_vecbodies.begin(), _vecbodies.end(), pBody);
-                        if( itBodyToRemove != _vecbodies.end() ) {
-                            _InvalidateKinBodyFromEnvBodyIndex(pBody->GetEnvironmentBodyIndex());
-                        }
-                    }
-                }
-
-                if( itExisting != vBodies.end() ) {
-                    if( itExisting != itExistingSameName && itExistingSameName != vBodies.end() ) {
-                        // new name will conflict with *itExistingSameName, so should change the names to something temporarily
-                        // for now, clear since the body should be processed later again
-                        RAVELOG_DEBUG_FORMAT("env=%s, have to clear body name '%s' id=%s for loading body with id=%s", GetNameId()%(*itExistingSameName)->GetName()%(*itExistingSameName)->GetId()%(*itExisting)->GetId());
-                        (*itExistingSameName)->SetName(_GetUniqueName((*itExistingSameName)->GetName()+"_tempRenamedDueToConflict_"));
-                        listBodiesTemporarilyRenamed.push_back(*itExistingSameName);
-                    }
-                    pMatchExistingBody = *itExisting;
-                    int nMatchingIndex = itExisting-vBodies.begin();
-                    if ( bodyIndex >= 0 && bodyIndex != nMatchingIndex) {
-                        // re-arrange vBodies according to the order of infos
-                        KinBodyPtr pTempBody = vBodies.at(bodyIndex);
-                        vBodies.at(bodyIndex) = pMatchExistingBody;
-                        *itExisting = pTempBody;
-                    }
-
-                    if (updateMode == UFIM_OnlySpecifiedBodiesExact) {
-                        usedBodyIndexSet.emplace(nMatchingIndex);
-                    }
-                }
-            }
+            } while (0);
 
             KinBodyPtr pInitBody; // body that has to be Init() again
+
+            // In the event that we have to remove the body from the environment to reinitialize it, we need to cache which bodies were grabbing it
+            // Each column of these vectors constitutes a 4-tuple describing a grab - the grabber, the grabbing link, the grab info, and the link indices to ignore.
             std::vector<KinBodyPtr> pGrabbingBodies;
             std::vector<KinBody::LinkPtr> pGrabbingLinks;
             std::vector<rapidjson::Document> rGrabbedUserDataDocuments;
-            std::vector<std::set<int>> linkIndicesToIgnore;
+            std::vector<std::set<int> > linkIndicesToIgnore;
 
+            // Were we able to match an existing body?
             if( !!pMatchExistingBody ) {
-                listBodiesTemporarilyRenamed.remove(pMatchExistingBody); // if targreted, then do not need to remove anymore
-
                 RAVELOG_VERBOSE_FORMAT("env=%s, update existing body id '%s', numGrabbed=%d", GetNameId()%pMatchExistingBody->_id%pMatchExistingBody->GetNumGrabbed());
-                // interface should match at this point
-                // update existing body or robot
+
+                // If we have an existing body to update, make sure that it gets removed from the list of temporarily renamed bodies,
+                // since we're about to give it a proper name / don't want it to get garbage collected later.
+                listBodiesTemporarilyRenamed.remove(pMatchExistingBody);
+
+                // We know that this body has a matching info in the list we were given, so note that it was directly selected by this update.
+                // This doesn't matter for OnlySpecifiedBodiesExact, but if that option is not passed, we need to know to keep it.
+                setBodiesWithMatchingInfos.emplace(pMatchExistingBody.get());
+
+                // Interface should match at this point, since if we had a mismatch in the previous step we should have removed the body already
+                OPENRAVE_ASSERT_OP(pKinBodyInfo->_isRobot, ==, pMatchExistingBody->IsRobot());
+
+                // Perform the actual update, making sure to call the correct virtual method if this is a robot
+
                 UpdateFromInfoResult updateFromInfoResult = UFIR_NoChange;
                 if (pKinBodyInfo->_isRobot && pMatchExistingBody->IsRobot()) {
                     RobotBasePtr pRobot = RaveInterfaceCast<RobotBase>(pMatchExistingBody);
@@ -3158,28 +3158,39 @@ public:
                     updateFromInfoResult = pMatchExistingBody->UpdateFromKinBodyInfo(*pKinBodyInfo);
                 }
                 RAVELOG_VERBOSE_FORMAT("env=%s, update body '%s' from info result %d, numGrabbed=%d", GetNameId() % pMatchExistingBody->_id % static_cast<int>(updateFromInfoResult)%pMatchExistingBody->GetNumGrabbed());
+
+                // If the body didn't change at all, nothing else needs be done. Don't count it as being modified by this update.
                 if (updateFromInfoResult == UFIR_NoChange) {
                     continue;
                 }
+
+                // If the body was either updated or couldn't be updated, bump the modification time and add it to our set of modified bodies
                 if (info._lastModifiedAtUS > pMatchExistingBody->_lastModifiedAtUS) {
                     pMatchExistingBody->_lastModifiedAtUS = info._lastModifiedAtUS;
                 }
                 pMatchExistingBody->_revisionId = info._revisionId;
                 vModifiedBodies.push_back(pMatchExistingBody);
+
+                // If the body could be updated without being removed from the environment, we're all set at this point.
                 if (updateFromInfoResult == UFIR_Success) {
                     continue;
                 }
 
-                // if this body is grabbed by another bodies, save the grabbing link and user data
+                // In some cases, the body can't be updated while still added to the environment (TODO: why?)
+                // If this happens, we need to first save information about which bodies are _grabbing_ this body (grabs are known from the body's own info)
+                // so that we can restore these grabs when the body is added back into the environment.
                 for (const KinBodyWeakPtr& pBody : pMatchExistingBody->_listAttachedBodies) {
+                    // Search the list of attached bodies for grabbers instead of the whole env
                     KinBodyPtr pAttached = pBody.lock();
                     if (!pAttached) {
                         continue;
                     }
+                    // For each attached body, check to see if it is grabbing the body we are about to remove
                     for (const KinBody::MapGrabbedByEnvironmentIndex::value_type& grabPair : pAttached->_grabbedBodiesByEnvironmentIndex) {
                         const GrabbedPtr& pGrabbed = grabPair.second;
                         KinBodyConstPtr pGrabbedBody = pGrabbed->_pGrabbedBody.lock();
                         if( !!pGrabbedBody && pGrabbedBody.get() == &*pMatchExistingBody ) {
+                            // This body is grabbing the body we are about to remove - save all of the grab info so that we can restore it.
                             pGrabbingBodies.push_back(pAttached);
                             pGrabbingLinks.push_back(pGrabbed->_pGrabbingLink);
                             rapidjson::Document rGrabbedUserData;
@@ -3190,7 +3201,7 @@ public:
                     }
                 }
 
-                // updating this body requires removing it and re-adding it to env
+                // Remove this body from the environment so that we can try updating it again
                 {
                     ExclusiveLock lock253(_mutexInterfaces);
                     vector<KinBodyPtr>::iterator itExisting = std::find(_vecbodies.begin(), _vecbodies.end(), pMatchExistingBody);
@@ -3239,8 +3250,9 @@ public:
                     _AddKinBody(pMatchExistingBody, IAM_StrictNameChecking); // internally locks _mutexInterfaces, name guarnateed to be unique
                 }
             }
+
+            // If we weren't able to locate an existing body to update, then we can just create a new one
             else {
-                // for new body or robot
                 KinBodyPtr pNewBody;
                 if (pKinBodyInfo->_isRobot) {
                     RAVELOG_VERBOSE_FORMAT("add new robot id '%s'", pKinBodyInfo->_id);
@@ -3270,21 +3282,14 @@ public:
                     _AddKinBody(pNewBody, IAM_AllowRenaming);
                 }
 
-                if (bodyIndex >= 0) {
-                    if (updateMode == UFIM_OnlySpecifiedBodiesExact) {
-                        usedBodyIndexSet.emplace(bodyIndex);
-                    }
-                    vBodies.insert(vBodies.begin() + bodyIndex, pNewBody);
-                }
-                else {
-                    if (updateMode == UFIM_OnlySpecifiedBodiesExact) {
-                        usedBodyIndexSet.emplace(vBodies.size());
-                    }
-                    vBodies.push_back(pNewBody);
-                }
                 pNewBody->_lastModifiedAtUS = info._lastModifiedAtUS;
                 pNewBody->_revisionId = info._revisionId;
+
+                // Indicate to the caller that this body was created as a result of the call
                 vCreatedBodies.push_back(pNewBody);
+
+                // Internally cache that this body has a matching body info in the event that we were not called with OnlySpecifiedBodiesExact
+                setBodiesWithMatchingInfos.emplace(pNewBody.get());
             }
 
             if (!!pInitBody) {
@@ -3324,26 +3329,24 @@ public:
             }
         }
 
+        // If we were not called with OnlySpecifiedBodiesExact, then any bodies that did not have matching body infos should be removed from the environment.
         if( updateMode != UFIM_OnlySpecifiedBodiesExact ) {
-            // remove extra bodies at the end of vBodies
-            if( vBodies.size() > info._vBodyInfos.size() ) {
-                ExclusiveLock lock009(_mutexInterfaces);
-                for (std::vector<KinBodyPtr>::iterator itBody = vBodies.begin() + info._vBodyInfos.size(); itBody != vBodies.end(); ) {
-                    KinBodyPtr pBody = *itBody;
-                    if (!pBody) {
-                        ++itBody;
-                        continue;
-                    }
-                    RAVELOG_VERBOSE_FORMAT("remove extra body env=%s, id=%s, name=%s", GetNameId()%pBody->_id%pBody->_name);
-
-                    vector<KinBodyPtr>::iterator itBodyToRemove = std::find(_vecbodies.begin(), _vecbodies.end(), pBody);
-                    if( itBodyToRemove != _vecbodies.end() ) {
-                        _InvalidateKinBodyFromEnvBodyIndex(pBody->GetEnvironmentBodyIndex());
-                    }
-
-                    vRemovedBodies.push_back(pBody);
-                    itBody = vBodies.erase(itBody);
+            // Iterate the bodies in the environment and remove any that were _not_ linked to a body info
+            ExclusiveLock lockInterfaces(_mutexInterfaces);
+            for (const KinBodyPtr& environmentBody : _vecbodies) {
+                // If this body isn't valid, skip it
+                if (!environmentBody) {
+                    continue;
                 }
+
+                // If this body had a matching info record, keep it
+                if (setBodiesWithMatchingInfos.find(environmentBody.get()) != setBodiesWithMatchingInfos.end()) {
+                    continue;
+                }
+
+                // If the body didn't get matched, add it to the set of removed bodies and erase it from the environment
+                RAVELOG_VERBOSE_FORMAT("remove extra body env=%s, id=%s, name=%s", GetNameId()%environmentBody->_id%environmentBody->_name);
+                vRemovedBodies.emplace_back(_InvalidateKinBodyFromEnvBodyIndex(environmentBody->GetEnvironmentBodyIndex()));
             }
         }
 
@@ -3353,44 +3356,38 @@ public:
             vRemovedBodies.push_back(pRenamedBody);
         }
 
-        // after all bodies are added, update the grab states
+        // After all bodies are added, update the grab states
         std::vector<KinBody::GrabbedInfoConstPtr> vGrabbedInfos;
         for(const KinBody::KinBodyInfoPtr& pKinBodyInfo : info._vBodyInfos) {
             const std::string& bodyName = pKinBodyInfo->_name;
 
-            // find existing body in the env, use name since that is more guaranteed to be unique
-            std::vector<KinBodyPtr>::iterator itExistingBody = vBodies.end();
-            FOREACH(itBody, vBodies) {
-                if ((*itBody)->_name == bodyName) {
-                    itExistingBody = itBody;
-                    break;
-                }
+            // Find existing body in the env, use name since that is more guaranteed to be unique
+            KinBodyPtr pExistingBody = GetKinBody(bodyName);
+            if (!pExistingBody) {
+                RAVELOG_WARN_FORMAT("env=%s, could not find body with name='%s'", GetNameId() % bodyName);
+                continue;
             }
 
-            if (itExistingBody != vBodies.end()) {
-                // grabbed infos
-                if ((int)pKinBodyInfo->_vGrabbedInfos.size() != (*itExistingBody)->GetNumGrabbed()) {
-                    RAVELOG_DEBUG_FORMAT("env=%s, body name='%s' updating grab from %d -> %d", GetNameId()%bodyName%(*itExistingBody)->GetNumGrabbed()%pKinBodyInfo->_vGrabbedInfos.size());
-                    // when grab info changes, have to report to caller
-                    if (std::find(vModifiedBodies.begin(), vModifiedBodies.end(), *itExistingBody) == vModifiedBodies.end() && std::find(vCreatedBodies.begin(), vCreatedBodies.end(), *itExistingBody) == vCreatedBodies.end()) {
-                        vModifiedBodies.push_back(*itExistingBody);
-                    }
+            // Restore the grabbed info
+            if ((int)pKinBodyInfo->_vGrabbedInfos.size() != pExistingBody->GetNumGrabbed()) { // Only marking it as modified if the _count_ of the grabbed bodies seems lossy?
+                RAVELOG_DEBUG_FORMAT("env=%s, body name='%s' updating grab from %d -> %d", GetNameId() % bodyName % pExistingBody->GetNumGrabbed() % pKinBodyInfo->_vGrabbedInfos.size());
+                // when grab info changes, have to report to caller
+                if (std::find(vModifiedBodies.begin(), vModifiedBodies.end(), pExistingBody) == vModifiedBodies.end() && std::find(vCreatedBodies.begin(), vCreatedBodies.end(), pExistingBody) == vCreatedBodies.end()) {
+                    vModifiedBodies.push_back(pExistingBody);
                 }
-                vGrabbedInfos.clear();
-                vGrabbedInfos.reserve(pKinBodyInfo->_vGrabbedInfos.size());
-                FOREACHC(itGrabbedInfo, pKinBodyInfo->_vGrabbedInfos) {
-                    if (!!GetKinBody((*itGrabbedInfo)->_grabbedname)) {
-                        vGrabbedInfos.push_back(*itGrabbedInfo);
-                    }
-                    else {
-                        RAVELOG_WARN_FORMAT("env=%s, body '%s' grabbed by '%s' is gone, ignoring grabbed info id '%s'", GetNameId()%(*itGrabbedInfo)->_grabbedname%pKinBodyInfo->_name%(*itGrabbedInfo)->_id);
-                    }
+            }
+            vGrabbedInfos.clear();
+            vGrabbedInfos.reserve(pKinBodyInfo->_vGrabbedInfos.size());
+            FOREACHC(itGrabbedInfo, pKinBodyInfo->_vGrabbedInfos)
+            {
+                if (!!GetKinBody((*itGrabbedInfo)->_grabbedname)) {
+                    vGrabbedInfos.push_back(*itGrabbedInfo);
                 }
-                (*itExistingBody)->ResetGrabbed(vGrabbedInfos);
+                else {
+                    RAVELOG_WARN_FORMAT("env=%s, body '%s' grabbed by '%s' is gone, ignoring grabbed info id '%s'", GetNameId() % (*itGrabbedInfo)->_grabbedname % pKinBodyInfo->_name % (*itGrabbedInfo)->_id);
+                }
             }
-            else {
-                RAVELOG_WARN_FORMAT("env=%s, could not find body with name='%s'", GetNameId()%bodyName);
-            }
+            pExistingBody->ResetGrabbed(vGrabbedInfos);
         }
 
         UpdatePublishedBodies();
@@ -4514,6 +4511,18 @@ protected:
         _prLoadEnvAlloc->Clear();
     }
 
+    inline EnvironmentLoadContextJSON& _GetEnvironmentLoadContextJSON(const EnvironmentLoadContextPtr& pLoadContext) {
+        if( !!pLoadContext ) {
+            EnvironmentLoadContextJSON* pJSON = dynamic_cast<EnvironmentLoadContextJSON*>(pLoadContext.get());
+            if( !!pJSON ) {
+                return *pJSON;
+            }
+        }
+
+        _dummyLoadContext.Reset(); // always reset the dummy context since don't know what was previously stored
+        return _dummyLoadContext;
+    }
+
     std::vector<KinBodyPtr> _vecbodies;     ///< all objects that are collidable (includes robots) sorted by env body index ascending order. Note that some element can be nullptr, and size of _vecbodies should be kept unchanged when body is removed from env. protected by _mutexInterfaces. [0] should always be kept null since 0 means no assignment.
 
     string_map<int> _mapBodyNameIndex; /// maps body name to env body index of bodies stored in _vecbodies sorted by name. used to lookup kin body by name. protected by _mutexInterfaces.
@@ -4560,6 +4569,7 @@ protected:
     std::map<std::string, uint64_t> _mapUInt64Parameters; ///< a custom user-driven parameters
     std::vector<uint8_t> _vRapidJsonLoadBuffer;
     boost::shared_ptr<rapidjson::MemoryPoolAllocator<> > _prLoadEnvAlloc; ///< allocator used for loading environments
+    EnvironmentLoadContextJSON _dummyLoadContext; ///< in case the user did not pass a load context
 
     bool _bInit;                   ///< environment is initialized
     bool _bEnableSimulation;            ///< enable simulation loop

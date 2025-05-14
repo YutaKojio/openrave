@@ -48,6 +48,18 @@ enum InterfaceAddMode
     IAM_StrictNameIdChecking = 3, ///< name and id are both strict, will throw exception if it conflicts.
 };
 
+/// \brief Cached context that can be passed to successive Load/LoadURI/ReadKinBodyURI calls to cache referenced objects across calls
+class EnvironmentLoadContext
+{
+public:
+    virtual ~EnvironmentLoadContext() {
+    }
+
+    /// \brief resets any type of cached data
+    virtual void Reset() = 0;
+};
+using EnvironmentLoadContextPtr = boost::shared_ptr<EnvironmentLoadContext>;
+
 /** \brief Maintains a world state, which serves as the gateway to all functions offered through %OpenRAVE. See \ref arch_environment.
  */
 class OPENRAVE_API EnvironmentBase : public boost::enable_shared_from_this<EnvironmentBase>
@@ -252,6 +264,9 @@ public:
     };
     typedef SelectionOptions TriangulateOptions;
 
+    /// \brief creates a load context for this environmnet used to cache common filesystem load operations
+    virtual EnvironmentLoadContextPtr CreateEnvironmentLoadContext() = 0;
+
     /** \brief Loads a scene from a file and adds all objects in the environment. <b>[multi-thread safe]</b>
 
         For collada readers, the options are passed through to
@@ -259,17 +274,17 @@ public:
         DAE::getIOPlugin()->setOption(key,value).
         \endcode
      */
-    virtual bool Load(const std::string& filename, const AttributesList& atts = AttributesList()) = 0;
+    virtual bool Load(const std::string& filename, const AttributesList& atts = AttributesList(), const EnvironmentLoadContextPtr& loadContext = nullptr) = 0;
 
     /** \brief Loads a scene from a URI and adds all objects in the environment. <b>[multi-thread safe]</b>
 
         \param uri the URI of the file to load. Scheme can be 'file:' or 'openrave:' or 'X:' if openravescheme is overwritten by atts
         \param atts a string set of attributes to pass to each loader. For example: 'openravescheme' can be overwritten.
      */
-    virtual bool LoadURI(const std::string& uri, const AttributesList& atts = AttributesList()) = 0;
+    virtual bool LoadURI(const std::string& uri, const AttributesList& atts = AttributesList(), const EnvironmentLoadContextPtr& loadContext = nullptr) = 0;
 
     /// \brief Loads a scene from in-memory data and adds all objects in the environment. <b>[multi-thread safe]</b>
-    virtual bool LoadData(const std::string& data, const AttributesList& atts = AttributesList(), const std::string& uri=std::string()) = 0;
+    virtual bool LoadData(const std::string& data, const AttributesList& atts = AttributesList(), const std::string& uri = std::string(), const EnvironmentLoadContextPtr& loadContext = nullptr) = 0;
 
     /// \brief loads a scene from rapidjson document
     ///
@@ -279,10 +294,11 @@ public:
     /// \param vRemovedBodies the bodies removed from the environment in this operation
     /// \param atts attributes that is passed to JSONReader for further options.
     /// \param uri the URI of the scene. Used to inject the URI into the environment.
-    virtual bool LoadJSON(const rapidjson::Value& rEnvInfo, UpdateFromInfoMode updateMode, std::vector<KinBodyPtr>& vCreatedBodies, std::vector<KinBodyPtr>& vModifiedBodies, std::vector<KinBodyPtr>& vRemovedBodies, const AttributesList& atts = AttributesList(), const std::string &uri = std::string()) = 0;
+    virtual bool LoadJSON(const rapidjson::Value& rEnvInfo, UpdateFromInfoMode updateMode, std::vector<KinBodyPtr>& vCreatedBodies, std::vector<KinBodyPtr>& vModifiedBodies, std::vector<KinBodyPtr>& vRemovedBodies, const AttributesList& atts = AttributesList(), const std::string& uri = std::string(), const EnvironmentLoadContextPtr& loadContext = nullptr) = 0;
 
-    virtual bool LoadXMLData(const std::string& data, const AttributesList& atts = AttributesList()) {
-        return LoadData(data,atts);
+    virtual bool LoadXMLData(const std::string& data, const AttributesList& atts = AttributesList(), EnvironmentLoadContextPtr loadContext = nullptr)
+    {
+        return LoadData(data, atts, "", loadContext);
     }
 
     /** \brief Saves a scene depending on the filename extension. Default is in COLLADA format
@@ -332,9 +348,9 @@ public:
         \param filename the name of the resource file, its extension determines the format of the file. See \ref supported_formats.
         \param atts The attribute/value pair specifying loading options. Defined in \ref arch_robot.
      */
-    virtual RobotBasePtr ReadRobotURI(RobotBasePtr robot, const std::string& filename, const AttributesList& atts = AttributesList()) = 0;
-    virtual RobotBasePtr ReadRobotXMLFile(RobotBasePtr robot, const std::string& filename, const AttributesList& atts = AttributesList()) {
-        return ReadRobotURI(robot,filename,atts);
+    virtual RobotBasePtr ReadRobotURI(RobotBasePtr robot, const std::string& filename, const AttributesList& atts = AttributesList(), const EnvironmentLoadContextPtr& loadContext = nullptr) = 0;
+    virtual RobotBasePtr ReadRobotXMLFile(RobotBasePtr robot, const std::string& filename, const AttributesList& atts = AttributesList(), const EnvironmentLoadContextPtr& loadContext = nullptr) {
+        return ReadRobotURI(robot, filename, atts, loadContext);
     }
 
     /// \brief Creates a new robot from a file with no extra load options specified. <b>[multi-thread safe]</b>
@@ -352,9 +368,9 @@ public:
         \param atts The attribute/value pair specifying loading options. If contains "uri", then will set the new body's uri string to it. If the file is COLLADA, can also specify articulatdSystemId for the then atts can have articulatdSystemId.  More info in \ref arch_robot.
 \param uri the URI of the scene. Used to inject the URI into the environment.
      */
-    virtual RobotBasePtr ReadRobotData(RobotBasePtr robot, const std::string& data, const AttributesList& atts = AttributesList(), const std::string& uri=std::string()) = 0;
-    virtual RobotBasePtr ReadRobotXMLData(RobotBasePtr robot, const std::string& data, const AttributesList& atts = AttributesList()) {
-        return ReadRobotData(robot,data,atts);
+    virtual RobotBasePtr ReadRobotData(RobotBasePtr robot, const std::string& data, const AttributesList& atts = AttributesList(), const std::string& uri=std::string(), const EnvironmentLoadContextPtr& loadContext = nullptr) = 0;
+    virtual RobotBasePtr ReadRobotXMLData(RobotBasePtr robot, const std::string& data, const AttributesList& atts = AttributesList(), const EnvironmentLoadContextPtr& loadContext = nullptr) {
+        return ReadRobotData(robot, data, atts, "", loadContext);
     }
 
     /** \brief Initialize a robot from rapidjson document.
@@ -366,7 +382,7 @@ public:
         \param uri the URI of the scene. Used to inject the URI into the environment.
         \returns the robot that is created.
      */
-    virtual RobotBasePtr ReadRobotJSON(RobotBasePtr robot, const rapidjson::Value& rEnvInfo, const AttributesList& atts = AttributesList(), const std::string &uri = std::string()) = 0;
+    virtual RobotBasePtr ReadRobotJSON(RobotBasePtr robot, const rapidjson::Value& rEnvInfo, const AttributesList& atts = AttributesList(), const std::string &uri = std::string(), const EnvironmentLoadContextPtr& loadContext = nullptr) = 0;
 
     /** \brief Initializes a kinematic body from a resource file. The body is not added to the environment when calling this function. <b>[multi-thread safe]</b>
 
@@ -374,17 +390,17 @@ public:
         \param body If a null pointer is passed, a new body will be created, otherwise an existing robot will be filled
         \param atts The attribute/value pair specifying loading options. Defined in \ref arch_kinbody.
      */
-    virtual KinBodyPtr ReadKinBodyURI(KinBodyPtr body, const std::string& filename, const AttributesList& atts = AttributesList()) = 0;
-    virtual KinBodyPtr ReadKinBodyXMLFile(KinBodyPtr body, const std::string& filename, const AttributesList& atts = AttributesList()) {
-        return ReadKinBodyURI(body,filename,atts);
+    virtual KinBodyPtr ReadKinBodyURI(KinBodyPtr body, const std::string& filename, const AttributesList& atts = AttributesList(), const EnvironmentLoadContextPtr& loadContext = nullptr) = 0;
+    virtual KinBodyPtr ReadKinBodyXMLFile(KinBodyPtr body, const std::string& filename, const AttributesList& atts = AttributesList(), const EnvironmentLoadContextPtr& loadContext = nullptr) {
+        return ReadKinBodyURI(body, filename, atts, loadContext);
     }
 
     /// \brief Creates a new kinbody from an XML file with no extra load options specified. <b>[multi-thread safe]</b>
-    virtual KinBodyPtr ReadKinBodyURI(const std::string& filename) {
-        return ReadKinBodyURI(KinBodyPtr(),filename,AttributesList());
+    virtual KinBodyPtr ReadKinBodyURI(const std::string& filename, const EnvironmentLoadContextPtr& loadContext = nullptr) {
+        return ReadKinBodyURI(KinBodyPtr(),filename,AttributesList(), loadContext);
     }
-    virtual KinBodyPtr ReadKinBodyXMLFile(const std::string& filename) {
-        return ReadKinBodyURI(filename);
+    virtual KinBodyPtr ReadKinBodyXMLFile(const std::string& filename, const EnvironmentLoadContextPtr& loadContext = nullptr) {
+        return ReadKinBodyURI(filename, loadContext);
     }
 
     /** \brief Initializes a kinematic body from in-memory data. <b>[multi-thread safe]</b>
@@ -394,9 +410,9 @@ public:
         \param atts The attribute/value pair specifying loading options. If contains "uri", then will set the new body's uri string to it. If the file is COLLADA, can also specify articulatdSystemId for the then atts can have articulatdSystemId. More info in \ref arch_kinbody.
         \param uri the URI of the scene. Used to inject the URI into the environment.
      */
-    virtual KinBodyPtr ReadKinBodyData(KinBodyPtr body, const std::string& data, const AttributesList& atts = AttributesList(), const std::string& uri=std::string()) = 0;
-    virtual KinBodyPtr ReadKinBodyXMLData(KinBodyPtr body, const std::string& data, const AttributesList& atts = AttributesList()) {
-        return ReadKinBodyData(body,data,atts);
+    virtual KinBodyPtr ReadKinBodyData(KinBodyPtr body, const std::string& data, const AttributesList& atts = AttributesList(), const std::string& uri=std::string(), const EnvironmentLoadContextPtr& loadContext = nullptr) = 0;
+    virtual KinBodyPtr ReadKinBodyXMLData(KinBodyPtr body, const std::string& data, const AttributesList& atts = AttributesList(), const EnvironmentLoadContextPtr& loadContext = nullptr) {
+        return ReadKinBodyData(body, data, atts, "", loadContext);
     }
 
     /** \brief Initializes a kinematic body from rapidjson document.
@@ -408,7 +424,7 @@ public:
         \param uri the URI of the scene. Used to inject the URI into the environment.
         \returns the body that is created.
      */
-    virtual KinBodyPtr ReadKinBodyJSON(KinBodyPtr body, const rapidjson::Value& rEnvInfo, const AttributesList& atts = AttributesList(), const std::string &uri = std::string()) = 0;
+    virtual KinBodyPtr ReadKinBodyJSON(KinBodyPtr body, const rapidjson::Value& rEnvInfo, const AttributesList& atts = AttributesList(), const std::string& uri = std::string(), const EnvironmentLoadContextPtr& loadContext = nullptr) = 0;
 
     /** \brief Initializes an interface from a resource file. <b>[multi-thread safe]</b>
 
@@ -416,9 +432,9 @@ public:
         \param filename the name of the resource file, its extension determines the format of the file. See \ref supported_formats.
         \param atts The attribute/value pair specifying loading options. See the individual interface descriptions at \ref interface_concepts.
      */
-    virtual InterfaceBasePtr ReadInterfaceURI(InterfaceBasePtr pinterface, InterfaceType type, const std::string& filename, const AttributesList& atts = AttributesList()) = 0;
-    virtual InterfaceBasePtr ReadInterfaceXMLFile(InterfaceBasePtr pinterface, InterfaceType type, const std::string& filename, const AttributesList& atts = AttributesList()) {
-        return ReadInterfaceURI(pinterface,type,filename,atts);
+    virtual InterfaceBasePtr ReadInterfaceURI(InterfaceBasePtr pinterface, InterfaceType type, const std::string& filename, const AttributesList& atts = AttributesList(), const EnvironmentLoadContextPtr& loadContext = nullptr) = 0;
+    virtual InterfaceBasePtr ReadInterfaceXMLFile(InterfaceBasePtr pinterface, InterfaceType type, const std::string& filename, const AttributesList& atts = AttributesList(), const EnvironmentLoadContextPtr& loadContext = nullptr) {
+        return ReadInterfaceURI(pinterface, type, filename, atts, loadContext);
     }
 
     virtual InterfaceBasePtr ReadInterfaceURI(const std::string& filename, const AttributesList& atts = AttributesList()) = 0;
