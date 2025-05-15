@@ -82,6 +82,10 @@ public:
 
     bool CheckCollision(OPENRAVE_SHARED_PTR<PyRay> pyray, PyKinBodyPtr pbody, PyCollisionReportPtr pReport);
 
+    bool CheckCollision(OPENRAVE_SHARED_PTR<PyRay> pyray, PyLinkPtr plink);
+
+    bool CheckCollision(OPENRAVE_SHARED_PTR<PyRay> pyray, PyLinkPtr plink, PyCollisionReportPtr pReport);
+
     object CheckCollisionRays(object rays, PyKinBodyPtr pbody,bool bFrontFacingOnly=false, object oCheckPreemptFn=py::none_());
 
     bool CheckCollision(OPENRAVE_SHARED_PTR<PyRay> pyray);

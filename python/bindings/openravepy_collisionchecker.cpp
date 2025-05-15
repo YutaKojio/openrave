@@ -618,6 +618,24 @@ bool PyCollisionCheckerBase::CheckCollision(OPENRAVE_SHARED_PTR<PyRay> pyray, Py
     return bCollision;
 }
 
+bool PyCollisionCheckerBase::CheckCollision(OPENRAVE_SHARED_PTR<PyRay> pyray, PyLinkPtr plink)
+{
+    return _pCollisionChecker->CheckCollision(pyray->r, LinkConstPtr(openravepy::GetKinBodyLinkConst(plink)));
+}
+
+bool PyCollisionCheckerBase::CheckCollision(OPENRAVE_SHARED_PTR<PyRay> pyray, PyLinkPtr plink, PyCollisionReportPtr pyreport)
+{
+    if( !pyreport ) {
+        return CheckCollision(pyray, plink);
+    }
+
+    CollisionReport report;
+    CollisionReportPtr preport(&report,utils::null_deleter());
+    bool bCollision = _pCollisionChecker->CheckCollision(pyray->r, LinkConstPtr(openravepy::GetKinBodyLinkConst(plink)), preport);
+    pyreport->Init(report);
+    return bCollision;
+}
+
 object PyCollisionCheckerBase::CheckCollisionRays(object rays, PyKinBodyPtr pbody, bool bFrontFacingOnly, object oCheckPreemptFn)
 {
     object shape = rays.attr("shape");
