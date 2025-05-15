@@ -271,7 +271,7 @@ void JSONDownloaderScope::_QueueDownloadURI(const char* pUri, rapidjson::Documen
         }
         // create a doc and insert to map first
         boost::shared_ptr<rapidjson::Document> pNewDoc = boost::make_shared<rapidjson::Document>(&_downloader._loadContext.rapidjsonAllocator);
-        RAVELOG_ERROR_FORMAT("caching doc for uri %s", canonicalUri);
+        RAVELOG_VERBOSE_FORMAT("caching doc for uri %s", canonicalUri);
         _downloader._loadContext.rapidjsonDocuments[canonicalUri] = pNewDoc;
         pDoc = pNewDoc.get();
     }
