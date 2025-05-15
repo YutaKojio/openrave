@@ -620,7 +620,7 @@ bool PyCollisionCheckerBase::CheckCollision(OPENRAVE_SHARED_PTR<PyRay> pyray, Py
 
 bool PyCollisionCheckerBase::CheckCollision(OPENRAVE_SHARED_PTR<PyRay> pyray, PyLinkPtr plink)
 {
-    return _pCollisionChecker->CheckCollision(pyray->r, LinkConstPtr(openravepy::GetKinBodyLinkConst(plink)));
+    return _pCollisionChecker->CheckCollision(pyray->r, openravepy::GetKinBodyLinkConst(plink));
 }
 
 bool PyCollisionCheckerBase::CheckCollision(OPENRAVE_SHARED_PTR<PyRay> pyray, PyLinkPtr plink, PyCollisionReportPtr pyreport)
@@ -631,7 +631,7 @@ bool PyCollisionCheckerBase::CheckCollision(OPENRAVE_SHARED_PTR<PyRay> pyray, Py
 
     CollisionReport report;
     CollisionReportPtr preport(&report,utils::null_deleter());
-    bool bCollision = _pCollisionChecker->CheckCollision(pyray->r, LinkConstPtr(openravepy::GetKinBodyLinkConst(plink)), preport);
+    bool bCollision = _pCollisionChecker->CheckCollision(pyray->r, openravepy::GetKinBodyLinkConst(plink), preport);
     pyreport->Init(report);
     return bCollision;
 }
