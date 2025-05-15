@@ -206,8 +206,13 @@ public:
 
     void SynchronizeWithAttached(const KinBody &body);
 
+    /// \brief Synchronize all bodies except the specified body.
+    ///
+    /// Useful to avoid redundant synchronization
+    /// while ensuring the rest of the bodies is up to date.
     void SynchronizeExcluded(const KinBodyConstPtr& pbodyexcluded);
 
+    /// \brief Synchronize only the specified link's collision geometry.
     void SynchronizeLink(const KinBody::Link &link);
 
     FCLKinBodyInfoPtr& GetInfo(const KinBody &body);
@@ -266,6 +271,14 @@ private:
     // what about the tests on non-zero size (eg. box extents) ?
     CollisionGeometryPtr _CreateFCLGeomFromGeometryInfo(const KinBody::GeometryInfo &info);
 
+    /// \brief Synchronize one link.
+    ///
+    /// If the link’s lastStamp differs from the body’s updateStamp,
+    /// its collision geometry is synchronized
+    ///
+    /// \param info The FCLKinBodyInfo for the parent body.
+    /// \param body The KinBody of the parent body.
+    /// \param linkIndex The integer index of the link within `body`.
     void _SynchronizeLink(FCLKinBodyInfo& info, const KinBody& body, int linkIndex);
 
     /// \brief pass in info.GetBody() as a reference to avoid dereferencing the weak pointer in FCLKinBodyInfo
