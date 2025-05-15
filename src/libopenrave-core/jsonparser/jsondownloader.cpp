@@ -76,8 +76,8 @@ JSONDownloadContext::~JSONDownloadContext()
     }
 }
 
-JSONDownloader::JSONDownloader(std::map<std::string, boost::shared_ptr<const rapidjson::Document> >& rapidJSONDocuments, const std::vector<std::string>& vOpenRAVESchemeAliases, const std::string& remoteUrl, const std::string& unixEndpoint) :
-    _rapidJSONDocuments(rapidJSONDocuments),
+JSONDownloader::JSONDownloader(EnvironmentLoadContextJSON& loadContext, const std::vector<std::string>& vOpenRAVESchemeAliases, const std::string& remoteUrl, const std::string& unixEndpoint) :
+    _loadContext(loadContext),
     _vOpenRAVESchemeAliases(vOpenRAVESchemeAliases),
     _remoteUrl(remoteUrl),
     _unixEndpoint(unixEndpoint)
@@ -265,13 +265,14 @@ void JSONDownloaderScope::_QueueDownloadURI(const char* pUri, rapidjson::Documen
     }
 
     if (!pDoc) {
-        if (_downloader._rapidJSONDocuments.find(canonicalUri) != _downloader._rapidJSONDocuments.end()) {
+        if (_downloader._loadContext.rapidjsonDocuments.find(canonicalUri) != _downloader._loadContext.rapidjsonDocuments.end()) {
             RAVELOG_VERBOSE_FORMAT("uri \"%s\" already in cache", canonicalUri);
-            return; // already in _rapidJSONDocuments
+            return; // already in rapidjsonDocuments
         }
         // create a doc and insert to map first
-        boost::shared_ptr<rapidjson::Document> pNewDoc = boost::make_shared<rapidjson::Document>(&_alloc);
-        _downloader._rapidJSONDocuments[canonicalUri] = pNewDoc;
+        boost::shared_ptr<rapidjson::Document> pNewDoc = boost::make_shared<rapidjson::Document>(&_downloader._loadContext.rapidjsonAllocator);
+        RAVELOG_ERROR_FORMAT("caching doc for uri %s", canonicalUri);
+        _downloader._loadContext.rapidjsonDocuments[canonicalUri] = pNewDoc;
         pDoc = pNewDoc.get();
     }
 
