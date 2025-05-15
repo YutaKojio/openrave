@@ -17,6 +17,7 @@
 #define NO_IMPORT_ARRAY
 #include <openravepy/openravepy_int.h>
 #include <openravepy/openravepy_kinbody.h>
+#include <openravepy/openravepy_jointinfo.h>
 #include <openravepy/openravepy_environmentbase.h>
 #include <openravepy/openravepy_collisionreport.h>
 #include <openravepy/openravepy_collisioncheckerbase.h>
