@@ -1765,6 +1765,26 @@ bool PyEnvironmentBase::CheckCollision(OPENRAVE_SHARED_PTR<PyRay> pyray, PyKinBo
     return bCollision;
 }
 
+bool PyEnvironmentBase::CheckCollision(OPENRAVE_SHARED_PTR<PyRay> pyray, PyLinkPtr pylink)
+{
+    return _penv->CheckCollision(pyray->r, openravepy::GetKinBodyLinkConst(pylink));
+}
+
+bool PyEnvironmentBase::CheckCollision(OPENRAVE_SHARED_PTR<PyRay> pyray, PyLinkPtr pylink, PyCollisionReportPtr pyreport)
+{
+    CollisionReport report;
+    CollisionReportPtr preport;
+    if( !!pyreport ) {
+        preport = CollisionReportPtr(&report,utils::null_deleter());
+    }
+
+    bool bCollision = _penv->CheckCollision(pyray->r, openravepy::GetKinBodyLinkConst(pylink), preport);
+    if( !!pyreport ) {
+        pyreport->Init(report);
+    }
+    return bCollision;
+}
+
 object PyEnvironmentBase::CheckCollisionRays(py::numeric::array rays, PyKinBodyPtr pbody, bool bFrontFacingOnly)
 {
     object shape = rays.attr("shape");
@@ -3679,6 +3699,8 @@ Because race conditions can pop up when trying to lock the openrave environment 
         bool (PyEnvironmentBase::*pcolber)(PyKinBodyPtr, object,object,PyCollisionReportPtr) = &PyEnvironmentBase::CheckCollision;
         bool (PyEnvironmentBase::*pcolyb)(OPENRAVE_SHARED_PTR<PyRay>,PyKinBodyPtr) = &PyEnvironmentBase::CheckCollision;
         bool (PyEnvironmentBase::*pcolybr)(OPENRAVE_SHARED_PTR<PyRay>, PyKinBodyPtr, PyCollisionReportPtr) = &PyEnvironmentBase::CheckCollision;
+        bool (PyEnvironmentBase::*pcolyl)(OPENRAVE_SHARED_PTR<PyRay>,PyLinkPtr) = &PyEnvironmentBase::CheckCollision;
+        bool (PyEnvironmentBase::*pcolylr)(OPENRAVE_SHARED_PTR<PyRay>, PyLinkPtr, PyCollisionReportPtr) = &PyEnvironmentBase::CheckCollision;
         bool (PyEnvironmentBase::*pcoly)(OPENRAVE_SHARED_PTR<PyRay>) = &PyEnvironmentBase::CheckCollision;
         bool (PyEnvironmentBase::*pcolyr)(OPENRAVE_SHARED_PTR<PyRay>, PyCollisionReportPtr) = &PyEnvironmentBase::CheckCollision;
 
@@ -3752,6 +3774,8 @@ Because race conditions can pop up when trying to lock the openrave environment 
                      .def("CheckCollision",pcolber, PY_ARGS("body","bodyexcluded","linkexcluded","report") DOXY_FN(EnvironmentBase,CheckCollision "KinBodyConstPtr; const std::vector; const std::vector; CollisionReportPtr"))
                      .def("CheckCollision",pcolyb, PY_ARGS("ray","body") DOXY_FN(EnvironmentBase,CheckCollision "const RAY; KinBodyConstPtr; CollisionReportPtr"))
                      .def("CheckCollision",pcolybr, PY_ARGS("ray","body","report") DOXY_FN(EnvironmentBase,CheckCollision "const RAY; KinBodyConstPtr; CollisionReportPtr"))
+                     .def("CheckCollision",pcolyl, PY_ARGS("ray","link") DOXY_FN(EnvironmentBase,CheckCollision "const RAY; LinkConstPtr;"))
+                     .def("CheckCollision",pcolylr, PY_ARGS("ray","link","report") DOXY_FN(EnvironmentBase,CheckCollision "const RAY; LinkConstPtr; CollisionReportPtr"))
                      .def("CheckCollision",pcoly, PY_ARGS("ray") DOXY_FN(EnvironmentBase,CheckCollision "const RAY; CollisionReportPtr"))
                      .def("CheckCollision",pcolyr, PY_ARGS("ray", "report") DOXY_FN(EnvironmentBase,CheckCollision "const RAY; CollisionReportPtr"))
 #ifdef USE_PYBIND11_PYTHON_BINDINGS

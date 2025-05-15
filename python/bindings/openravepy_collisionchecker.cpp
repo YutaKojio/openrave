@@ -141,7 +141,7 @@ std::string PyCollisionReport::__str__() const
 {
     std::stringstream s;
     s << "[";
-    for(int index = 0; index < len(collisionInfos); ++index) {
+    for(size_t index = 0; index < len(collisionInfos); ++index) {
         const PyCollisionPairInfo& pycpinfo = py::extract<PyCollisionPairInfo>(collisionInfos[index]);
         s << pycpinfo.__str__();
         s << ", ";
@@ -618,20 +618,20 @@ bool PyCollisionCheckerBase::CheckCollision(OPENRAVE_SHARED_PTR<PyRay> pyray, Py
     return bCollision;
 }
 
-bool PyCollisionCheckerBase::CheckCollision(OPENRAVE_SHARED_PTR<PyRay> pyray, PyLinkPtr plink)
+bool PyCollisionCheckerBase::CheckCollision(OPENRAVE_SHARED_PTR<PyRay> pyray, PyLinkPtr pylink)
 {
-    return _pCollisionChecker->CheckCollision(pyray->r, openravepy::GetKinBodyLinkConst(plink));
+    return _pCollisionChecker->CheckCollision(pyray->r, openravepy::GetKinBodyLinkConst(pylink));
 }
 
-bool PyCollisionCheckerBase::CheckCollision(OPENRAVE_SHARED_PTR<PyRay> pyray, PyLinkPtr plink, PyCollisionReportPtr pyreport)
+bool PyCollisionCheckerBase::CheckCollision(OPENRAVE_SHARED_PTR<PyRay> pyray, PyLinkPtr pylink, PyCollisionReportPtr pyreport)
 {
     if( !pyreport ) {
-        return CheckCollision(pyray, plink);
+        return CheckCollision(pyray, pylink);
     }
 
     CollisionReport report;
     CollisionReportPtr preport(&report,utils::null_deleter());
-    bool bCollision = _pCollisionChecker->CheckCollision(pyray->r, openravepy::GetKinBodyLinkConst(plink), preport);
+    bool bCollision = _pCollisionChecker->CheckCollision(pyray->r, openravepy::GetKinBodyLinkConst(pylink), preport);
     pyreport->Init(report);
     return bCollision;
 }
@@ -1030,6 +1030,8 @@ void init_openravepy_collisionchecker()
     bool (PyCollisionCheckerBase::*pcolber)(PyKinBodyPtr, object,object,PyCollisionReportPtr) = &PyCollisionCheckerBase::CheckCollision;
     bool (PyCollisionCheckerBase::*pcolyb)(OPENRAVE_SHARED_PTR<PyRay>,PyKinBodyPtr) = &PyCollisionCheckerBase::CheckCollision;
     bool (PyCollisionCheckerBase::*pcolybr)(OPENRAVE_SHARED_PTR<PyRay>, PyKinBodyPtr, PyCollisionReportPtr) = &PyCollisionCheckerBase::CheckCollision;
+    bool (PyCollisionCheckerBase::*pcolyl)(OPENRAVE_SHARED_PTR<PyRay>, PyLinkPtr) = &PyCollisionCheckerBase::CheckCollision;
+    bool (PyCollisionCheckerBase::*pcolylr)(OPENRAVE_SHARED_PTR<PyRay>, PyLinkPtr, PyCollisionReportPtr) = &PyCollisionCheckerBase::CheckCollision;
     bool (PyCollisionCheckerBase::*pcoly)(OPENRAVE_SHARED_PTR<PyRay>) = &PyCollisionCheckerBase::CheckCollision;
     bool (PyCollisionCheckerBase::*pcolyr)(OPENRAVE_SHARED_PTR<PyRay>, PyCollisionReportPtr) = &PyCollisionCheckerBase::CheckCollision;
     bool (PyCollisionCheckerBase::*pcoltbr)(object, PyKinBodyPtr, PyCollisionReportPtr) = &PyCollisionCheckerBase::CheckCollisionTriMesh;
@@ -1056,8 +1058,10 @@ void init_openravepy_collisionchecker()
     .def("CheckCollision",pcolbr, PY_ARGS("body","report") DOXY_FN(CollisionCheckerBase,CheckCollision "KinBodyConstPtr; CollisionReportPtr"))
     .def("CheckCollision",pcolbb, PY_ARGS("body1","body2") DOXY_FN(CollisionCheckerBase,CheckCollision "KinBodyConstPtr; KinBodyConstPtr; CollisionReportPtr"))
     .def("CheckCollision",pcolbbr, PY_ARGS("body1","body2","report") DOXY_FN(CollisionCheckerBase,CheckCollision "KinBodyConstPtr; KinBodyConstPtr; CollisionReportPtr"))
-    .def("CheckCollision",pcolyb, PY_ARGS("ray","body") DOXY_FN(CollisionCheckerBase,CheckCollision "const RAY; KinBodyConstPtr; CollisionReportPtr"))
+    .def("CheckCollision",pcolyb, PY_ARGS("ray","body") DOXY_FN(CollisionCheckerBase,CheckCollision "const RAY; KinBodyConstPtr;"))
     .def("CheckCollision",pcolybr, PY_ARGS("ray","body","report") DOXY_FN(CollisionCheckerBase,CheckCollision "const RAY; KinBodyConstPtr; CollisionReportPtr"))
+    .def("CheckCollision",pcolyl, PY_ARGS("ray","link") DOXY_FN(CollisionCheckerBase,CheckCollision "const RAY; KinBody::LinkConstPtr;"))
+    .def("CheckCollision",pcolylr, PY_ARGS("ray","link","report") DOXY_FN(CollisionCheckerBase,CheckCollision "const RAY; KinBody::LinkConstPtr; CollisionReportPtr"))
     .def("CheckCollision",pcoly, PY_ARGS("ray") DOXY_FN(CollisionCheckerBase,CheckCollision "const RAY; CollisionReportPtr"))
     .def("CheckCollision",pcolyr, PY_ARGS("ray", "report") DOXY_FN(CollisionCheckerBase,CheckCollision "const RAY; CollisionReportPtr"))
     .def("CheckCollision",pcoll, PY_ARGS("link") DOXY_FN(CollisionCheckerBase,CheckCollision "KinBody::LinkConstPtr; CollisionReportPtr"))
