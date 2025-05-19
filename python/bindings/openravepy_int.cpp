@@ -3774,8 +3774,8 @@ Because race conditions can pop up when trying to lock the openrave environment 
                      .def("CheckCollision",pcolber, PY_ARGS("body","bodyexcluded","linkexcluded","report") DOXY_FN(EnvironmentBase,CheckCollision "KinBodyConstPtr; const std::vector; const std::vector; CollisionReportPtr"))
                      .def("CheckCollision",pcolyb, PY_ARGS("ray","body") DOXY_FN(EnvironmentBase,CheckCollision "const RAY; KinBodyConstPtr; CollisionReportPtr"))
                      .def("CheckCollision",pcolybr, PY_ARGS("ray","body","report") DOXY_FN(EnvironmentBase,CheckCollision "const RAY; KinBodyConstPtr; CollisionReportPtr"))
-                     .def("CheckCollision",pcolyl, PY_ARGS("ray","link") DOXY_FN(EnvironmentBase,CheckCollision "const RAY; LinkConstPtr;"))
-                     .def("CheckCollision",pcolylr, PY_ARGS("ray","link","report") DOXY_FN(EnvironmentBase,CheckCollision "const RAY; LinkConstPtr; CollisionReportPtr"))
+                     .def("CheckCollision",pcolyl, PY_ARGS("ray","link") DOXY_FN(EnvironmentBase,CheckCollision "const RAY; KinBody::LinkConstPtr;"))
+                     .def("CheckCollision",pcolylr, PY_ARGS("ray","link","report") DOXY_FN(EnvironmentBase,CheckCollision "const RAY; KinBody::LinkConstPtr; CollisionReportPtr"))
                      .def("CheckCollision",pcoly, PY_ARGS("ray") DOXY_FN(EnvironmentBase,CheckCollision "const RAY; CollisionReportPtr"))
                      .def("CheckCollision",pcolyr, PY_ARGS("ray", "report") DOXY_FN(EnvironmentBase,CheckCollision "const RAY; CollisionReportPtr"))
 #ifdef USE_PYBIND11_PYTHON_BINDINGS
