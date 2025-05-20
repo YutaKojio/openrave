@@ -3762,12 +3762,6 @@ Because race conditions can pop up when trying to lock the openrave environment 
                      .def("CheckCollision",pcolbr, PY_ARGS("body","report") DOXY_FN(EnvironmentBase,CheckCollision "KinBodyConstPtr; CollisionReportPtr"))
                      .def("CheckCollision",pcolbb, PY_ARGS("body1","body2") DOXY_FN(EnvironmentBase,CheckCollision "KinBodyConstPtr; KinBodyConstPtr; CollisionReportPtr"))
                      .def("CheckCollision",pcolbbr, PY_ARGS("body1","body2","report") DOXY_FN(EnvironmentBase,CheckCollision "KinBodyConstPtr; KinBodyConstPtr; CollisionReportPtr"))
-                     .def("CheckCollision",pcoll, PY_ARGS("link") DOXY_FN(EnvironmentBase,CheckCollision "KinBody::LinkConstPtr; CollisionReportPtr"))
-                     .def("CheckCollision",pcollr, PY_ARGS("link","report") DOXY_FN(EnvironmentBase,CheckCollision "KinBody::LinkConstPtr; CollisionReportPtr"))
-                     .def("CheckCollision",pcollb, PY_ARGS("link","body") DOXY_FN(EnvironmentBase,CheckCollision "KinBody::LinkConstPtr; KinBodyConstPtr; CollisionReportPtr"))
-                     .def("CheckCollision",pcollbr, PY_ARGS("link","body","report") DOXY_FN(EnvironmentBase,CheckCollision "KinBody::LinkConstPtr; KinBodyConstPtr; CollisionReportPtr"))
-                     .def("CheckCollision",pcolle, PY_ARGS("link","bodyexcluded","linkexcluded") DOXY_FN(EnvironmentBase,CheckCollision "KinBody::LinkConstPtr; const std::vector; const std::vector; CollisionReportPtr"))
-                     .def("CheckCollision",pcoller, PY_ARGS("link","bodyexcluded","linkexcluded","report") DOXY_FN(EnvironmentBase,CheckCollision "KinBody::LinkConstPtr; const std::vector; const std::vector; CollisionReportPtr"))
                      .def("CheckCollision",pcolbe, PY_ARGS("body","bodyexcluded","linkexcluded") DOXY_FN(EnvironmentBase,CheckCollision "KinBodyConstPtr; const std::vector; const std::vector; CollisionReportPtr"))
                      .def("CheckCollision",pcolber, PY_ARGS("body","bodyexcluded","linkexcluded","report") DOXY_FN(EnvironmentBase,CheckCollision "KinBodyConstPtr; const std::vector; const std::vector; CollisionReportPtr"))
                      .def("CheckCollision",pcolyb, PY_ARGS("ray","body") DOXY_FN(EnvironmentBase,CheckCollision "const RAY; KinBodyConstPtr; CollisionReportPtr"))
@@ -3776,7 +3770,13 @@ Because race conditions can pop up when trying to lock the openrave environment 
                      .def("CheckCollision",pcolylr, PY_ARGS("ray","link","report") DOXY_FN(EnvironmentBase,CheckCollision "const RAY; KinBody::LinkConstPtr; CollisionReportPtr"))
                      .def("CheckCollision",pcoly, PY_ARGS("ray") DOXY_FN(EnvironmentBase,CheckCollision "const RAY; CollisionReportPtr"))
                      .def("CheckCollision",pcolyr, PY_ARGS("ray", "report") DOXY_FN(EnvironmentBase,CheckCollision "const RAY; CollisionReportPtr"))
-                     .def("CheckCollision",pcolll, PY_ARGS("link1","link2") DOXY_FN(EnvironmentBase,CheckCollision "KinBody::LinkConstPtr; KinBody::LinkConstPtr; CollisionReportPtr"))  // must follow 2-arg overloads; this function overload matches generic (object, object) signatures
+                     .def("CheckCollision",pcoll, PY_ARGS("link") DOXY_FN(EnvironmentBase,CheckCollision "KinBody::LinkConstPtr; CollisionReportPtr"))  // must follow the other 1-arg overloads; this function overload matches generic (object) signatures
+                     .def("CheckCollision",pcollr, PY_ARGS("link","report") DOXY_FN(EnvironmentBase,CheckCollision "KinBody::LinkConstPtr; CollisionReportPtr"))
+                     .def("CheckCollision",pcollb, PY_ARGS("link","body") DOXY_FN(EnvironmentBase,CheckCollision "KinBody::LinkConstPtr; KinBodyConstPtr; CollisionReportPtr"))
+                     .def("CheckCollision",pcollbr, PY_ARGS("link","body","report") DOXY_FN(EnvironmentBase,CheckCollision "KinBody::LinkConstPtr; KinBodyConstPtr; CollisionReportPtr"))
+                     .def("CheckCollision",pcolle, PY_ARGS("link","bodyexcluded","linkexcluded") DOXY_FN(EnvironmentBase,CheckCollision "KinBody::LinkConstPtr; const std::vector; const std::vector; CollisionReportPtr"))
+                     .def("CheckCollision",pcoller, PY_ARGS("link","bodyexcluded","linkexcluded","report") DOXY_FN(EnvironmentBase,CheckCollision "KinBody::LinkConstPtr; const std::vector; const std::vector; CollisionReportPtr"))
+                     .def("CheckCollision",pcolll, PY_ARGS("link1","link2") DOXY_FN(EnvironmentBase,CheckCollision "KinBody::LinkConstPtr; KinBody::LinkConstPtr; CollisionReportPtr"))
                      .def("CheckCollision",pcolllr, PY_ARGS("link1","link2","report") DOXY_FN(EnvironmentBase,CheckCollision "KinBody::LinkConstPtr; KinBody::LinkConstPtr; CollisionReportPtr"))
 #ifdef USE_PYBIND11_PYTHON_BINDINGS
                      .def("CheckCollisionRays",&PyEnvironmentBase::CheckCollisionRays,
