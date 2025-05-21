@@ -3,7 +3,7 @@
 ChangeLog
 #########
 
-Version 0.168.0
+Version 0.167.2
 ===============
 
 - Optimize link checkCollision not to synchronize unnecessary links.
