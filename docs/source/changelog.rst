@@ -3,6 +3,12 @@
 ChangeLog
 #########
 
+Version 0.167.2
+===============
+
+- Fix ODE ray collision checking where `CheckCollision` always returned false when the `CO_RayAnyHit` option was not set.
+- Add support for `CheckCollision(ray, link, report)` pybind interface.
+
 Version 0.167.1
 ===============
 
