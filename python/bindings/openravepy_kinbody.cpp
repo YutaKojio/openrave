@@ -4471,6 +4471,16 @@ KinBody::LinkConstPtr GetKinBodyLinkConst(object o)
     return KinBody::LinkConstPtr();
 }
 
+KinBody::LinkPtr GetKinBodyLink(PyLinkPtr pyLink)
+{
+    return !pyLink ? KinBody::LinkPtr() : pyLink->GetLink();
+}
+
+KinBody::LinkConstPtr GetKinBodyLinkConst(PyLinkPtr pyLink)
+{
+    return !pyLink ? KinBody::LinkConstPtr() : pyLink->GetLink();
+}
+
 KinBody::JointPtr GetKinBodyJoint(object o)
 {
     extract_<PyJointPtr> pyjoint(o);
