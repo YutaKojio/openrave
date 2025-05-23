@@ -124,7 +124,7 @@ public:
             KinBody::LinkWeakPtr _plink;
             vector< boost::shared_ptr<FCLGeometryInfo> > vgeominfos; ///< info for every geometry of the link
 
-            int nLastStamp = 0; ///< Tracks if the collision geometries are up to date wrt the body update stamp. This is for narrow phase collision
+            int nLastStamp = 0; ///< Tracks if the collision geometries are up to date wrt the body update stamp. This is for narrow phase collision. This should be the same as FCLKinBodyInfo.nLastStamp or newer
             TranslationCollisionPair linkBV; ///< pair of the translation and collision object corresponding to a bounding OBB for the link
             std::vector<TransformCollisionPair> vgeoms; ///< vector of transformations and collision object; one per geometries
             std::string bodylinkname; // for debugging purposes
